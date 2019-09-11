@@ -1,11 +1,28 @@
-language: haskell
-ghc:
-  - "8.0.2"
-  - "8.2.2"
-  - "8.4.4"
-  - "8.6.5"
+# Author: Liang-Ting Chen
+
+# NB: don't set `language: haskell` here.
+language: c
+
+# Request Ubuntu Trusty (14.04 LTS).
+dist: trusty
+
+# Explicitly request sudo-enabled virtual environments [Issue #1992].
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.stack
+git:
+  submodules: false
 
 before_install:
-  - cabal install --only-dependencies
+# Download and unpack the stack executable
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - export ARGS="--no-terminal --system-ghc"
 install:
-  - cabal configure && cabal build
+  - stack build ${ARGS} --only-dependencies
+script:
+  - stack install ${ARGS} --skip-ghc-check
+  - fix-agda-whitespace --check
