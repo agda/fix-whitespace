@@ -1,0 +1,7 @@
+resolver: lts-9.21
+
+packages:
+  - .
+
+extra-deps:
+  - text-1.2.3.1
