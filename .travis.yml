@@ -5,6 +5,7 @@ branches:
   only:
   - master
   - "/^issue.*/"
+  - "/^release-.*/"
 git:
   submodules: false
 env:
@@ -43,8 +44,10 @@ deploy:
   provider: releases
   skip_cleanup: true
   file: "${BIN}.gz"
+  all_branches: true
   on:
+    repo: agda/fix-whitespace
     condition: $GHC_VER = 8.6.5
     tags: true
   api_key:
-    secure: Opg82RES+K61MN1+aiOsM6Cp+DIhw6qm41y8qmHfsFGcCIJDDOIRY15G6yf9L0YisC9j2/Tha3QnRbNdxi4DZ3BO6eJ2gWBQN0he50FP9l7HHaYFoESgeLr1clnVAyT5eeHDmCaT2RYk5FFbJZ0dOPD/fC69FG4BvOVR+qDRDSSXMOO3bgdRbMnF/sVABNHd82oyqlXZuzc4PnUGiShVG/LNZHaGvDhFcWorfsMtK3fhLs+QTAjCFb/eHs1EfGyk+oOoaZylf5Ss/4lJ4jWRU7Lp75lZzLIivrZLdr7LIDzH8Mm8DHLs31aoEqA/Na7BH8UDJgxsGLzvWWcWQFDBpjLzRU7s6aN72IhmdVQRR9+y0infpmyt5rvC/CqwVXSGolG05tokrTjexTjMWmYYf0aJ7RNVijAq++55lG5Ye6YgYTdfY3YSrs3eQWRE2leLc56OyjeptK7Yng4bgZpAnmV7zXfsrP+VaOeAx/91iPqgu4xpmRWjvyCxdXxHoYqim7nOdu96Jyc/V82TrhHKKy2gzW8jICC3cmVuskL9y8BFO7tRdohC4do/IcU82L+q/GeWRLLhpd9aTWOiNQV1BYHfJN8rWprSW+9GUfihsAPspm/JMFc9rT/5pILUrLyYe6McJXf4d6kan5Izo25TieR4jpXjULa9ne/mDO/sYro=
+    secure: Ku4XueVQfX2Ie/9YFRwV2A5xaXCHSG18mRnZcmlIYf0AhXpdJIwYBDLf/ZN5gEAQktWlpWoyJIoRifLMTp3rCMkx4FrThm3X+qpXeP3SBet3skH50/6ve3DkhFNOzCKHpuiiPY95m1zkz0Pd4/Giv/EJZSz5ASXSph/ctQUHdFdNOuCXzjHJ9siOnZp6j8/KxNJKkt6YC5dt15N6KiPqMefUJjuT9F6QJplZYG6GbqSqIXdSeirJabI4ebH9xEwNHIIStnBwrtwx4uAbg3ossCl/Bu5c9PiTkIH80DW4lGOeOHtwtEEad98qL+IMsiIRH6C31EuMZlCPJedDzYF1hdH9cNiYSo+JFM5T14DSoxMMw4qDk98TBBOXex6MB/t2eHnOeQ6Vb5Y9HYNxkEN+ehZ3geaMmk8RYJ16lnDZwwY4wqDCUCcbNmnzz0p/rlSnL40Zpent5WKznhp5EPmldZB5RHE9RRvg+dsWWpQ4qErIN+NPS/GXNk3cARjoVRXQIgI4D8BlCwShPiNK35ybHEqZIYUlcK4KH8sOlBf9nTxSm9hio9I2xu4ADe3B++ShYwkza9jpMAo/AFf76hPCOJBsjqQYPBULhFlVtgfDgiBVNHpbbFDCFs/SPtgUwY79wDdWkeJwNG/94ck/eYK3DSvwh3Yg6p8hG7d9eQby3Ok=
