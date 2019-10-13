@@ -1,2 +1,6 @@
-.stack-work
-dist
+.stack-work/
+dist/
+dist-newstyle/
+cabal.project.local
+.lock
+.log
