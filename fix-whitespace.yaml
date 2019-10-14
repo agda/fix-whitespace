@@ -1,4 +1,4 @@
-# fix-agda-whitespace determines the set of directories first and
+# fix-whitespace determines the set of directories first and
 # then the set of filenames inside those directories.
 #
 # The extended glob pattern can be used to specify file/direcotory names.
