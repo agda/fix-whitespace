@@ -1,13 +1,13 @@
-fix-agda-whitespace: Fixes whitespace issues. [![Build Status](https://travis-ci.org/agda/fix-whitespace.svg?branch=master)](https://travis-ci.org/agda/fix-whitespace)
+fix-whitespace: Fixes whitespace issues. [![Build Status](https://travis-ci.org/agda/fix-whitespace.svg?branch=master)](https://travis-ci.org/agda/fix-whitespace)
 ---------------------------------------------
 
-Usage: `fix-agda-whitespace [--check]`
+Usage: `fix-whitespace [--check]`
 
 This program should be run in the base directory.
 
 The program does the following for every file listed in
 
-`fix-agda-whitespace.yaml`
+`fix-whitespace.yaml`
 
 under the current directory:
 
