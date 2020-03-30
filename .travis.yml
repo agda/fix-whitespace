@@ -13,6 +13,7 @@ env:
   global:
   - BIN=fix-whitespace
   matrix:
+  - GHC_VER=8.10.1
   - GHC_VER=8.8.3
   - GHC_VER=8.6.5
   - GHC_VER=8.4.4
