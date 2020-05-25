@@ -45,7 +45,7 @@ main = do
   base <- getCurrentDirectory
 
   paths <- find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
-  -- For debugging: 
+  -- For debugging:
   -- putStrLn (show paths)
 
   changes <- mapM (fix mode) paths
