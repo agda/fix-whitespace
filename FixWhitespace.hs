@@ -30,7 +30,7 @@ defaultLoc = "fix-whitespace.yaml"
 data Mode
   = Fix    -- ^ Fix whitespace issues.
   | Check  -- ^ Check if there are any whitespace issues.
-    deriving Eq
+    deriving (Show, Eq)
 
 main :: IO ()
 main = do
@@ -44,8 +44,11 @@ main = do
   Config incDirs excDirs incFiles excFiles <- parseConfig defaultLoc
   base <- getCurrentDirectory
 
-  changes <- mapM (fix mode) =<<
-    find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
+  paths <- find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
+  -- For debugging: 
+  -- putStrLn (show paths)
+
+  changes <- mapM (fix mode) paths
 
   when (or changes && mode == Check) exitFailure
 
@@ -82,6 +85,19 @@ usage progName = unlines
   list [x, y]   = x ++ " and " ++ y
   list (x : xs) = x ++ ", " ++ list xs
 
+
+-- GlobPatterns treat "\\" as an escape character
+-- so on Windows, we manually append the path separator
+-- and then convert all path separators to "/" so that
+-- the regex-style pattern matching works (because of other
+-- isues... see https://github.com/bos/filemanip/issues/14)
+fixPath :: String -> String
+fixPath = concatMap fixChars
+  where
+  fixChars :: Char -> String
+  fixChars '\\' = "/"
+  fixChars c = [c]
+
 -- Directory filter
 validDir
   :: FilePath
@@ -92,8 +108,10 @@ validDir
      -- ^ The list of excluded directories if *not* included above.
   -> RecursionPredicate
 validDir base incDirs excDirs =
-      foldr (||?) never  ((filePath ~~?) . (base </>) <$> incDirs)
-  ||? foldr (&&?) always ((filePath /~?) . (base </>) <$> excDirs)
+      foldr (||?) never  (test (~~?) <$> incDirs)
+  ||? foldr (&&?) always (test (/~?) <$> excDirs)
+  where
+  test op = op (fixPath <$> filePath) . (fixPath (addTrailingPathSeparator base) ++)
 
 -- File filter
 validFile
@@ -105,8 +123,10 @@ validFile
      -- ^  The list of excluded file names if included above.
   -> FindClause Bool
 validFile base incFiles excFiles =
-      foldr (||?) never  ((filePath ~~?) . (base </>) <$> incFiles)
-  &&? foldr (&&?) always ((filePath /~?) . (base </>) <$> excFiles)
+      foldr (||?) never  (test (~~?) <$> incFiles)
+  &&? foldr (&&?) always (test (/~?) <$> excFiles)
+  where
+  test op = op (fixPath <$> filePath) . (fixPath (addTrailingPathSeparator base) ++)
 
 -- | Unconditionally return False.
 never :: FindClause Bool
