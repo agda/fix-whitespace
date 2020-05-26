@@ -171,7 +171,6 @@ never = return False
 
 fix :: Mode -> Verbose -> FilePath -> IO Bool
 fix mode verbose f = do
-  when verbose (putStrLn $ "[ Checking ] " ++ f)
 
   new <- withFile f ReadMode $ \h -> do
     hSetEncoding h utf8
@@ -179,12 +178,14 @@ fix mode verbose f = do
     let s' = transform s
     return $ if s' == s then Nothing else Just s'
   case new of
-    Nothing -> return False
+    Nothing -> do
+      when verbose (putStrLn $ "[ Checked ] " ++ f)
+      return False
     Just s  -> do
       hPutStrLn stderr $
         "[ Violation " ++
         (if mode == Fix then "fixed" else "detected") ++
-        " ] " ++ f ++ "."
+        " ] " ++ f
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
           hSetEncoding h utf8
