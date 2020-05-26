@@ -11,76 +11,130 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text  -- Strict IO.
 
-import System.Directory ( getCurrentDirectory )
+import System.Directory ( getCurrentDirectory, doesFileExist)
 import System.Environment
 import System.Exit
 import System.FilePath
 import System.FilePath.Find
+import System.FilePath.Glob
 import System.IO
+import System.Console.GetOpt
 
 import ParseConfig
 
--- The location of the configuration file.
--- TODO: Add an option to specify a custom location.
-defaultLoc :: FilePath
-defaultLoc = "fix-whitespace.yaml"
-
 -- Modes.
-
 data Mode
   = Fix    -- ^ Fix whitespace issues.
   | Check  -- ^ Check if there are any whitespace issues.
-    deriving Eq
+    deriving (Show, Eq)
 
-main :: IO ()
-main = do
-  args <- getArgs
-  progName <- getProgName
-  mode <- case args of
-    []          -> return Fix
-    ["--check"] -> return Check
-    _           -> hPutStr stderr (usage progName) >> exitFailure
+type Verbose = Bool
 
-  Config incDirs excDirs incFiles excFiles <- parseConfig defaultLoc
-  base <- getCurrentDirectory
+data Options = Options
+  { optVerbose :: Verbose
+  -- ^ Display the location of a file being checked or not.
+  , optHelp    :: Bool
+  -- ^ Display the help information.
+  , optMode    :: Mode
+  , optConfig  :: FilePath
+  -- ^ The location to the configuration file.
+  }
 
-  changes <- mapM (fix mode) =<<
-    find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
+defaultOptions = Options
+  { optVerbose = False
+  , optHelp    = False
+  , optMode    = Fix
+  , optConfig  = "fix-whitespace.yaml"
+  }
 
-  when (or changes && mode == Check) exitFailure
+options :: [OptDescr (Options -> Options)]
+options =
+  [ Option ['h']     ["help"]
+      (NoArg (\opts -> opts { optHelp = True }))
+      "Show this help information."
+  , Option ['v']     ["verbose"]
+      (NoArg (\opts -> opts { optVerbose = True }))
+      "Show files as they are being checked."
+  , Option []        ["config"]
+      (ReqArg (\loc opts -> opts { optConfig = loc }) "CONFIG")
+      "Override the project configuration fix-whitespace.yaml."
+  , Option []        ["check"]
+      (NoArg (\opts -> opts { optMode = Check }))
+      (unlines
+        [ "With --check the program does not change any files,"
+        , "it just checks if any files would have been changed."
+        , "In this case it returns with a non-zero exit code."
+        ])
+  ]
 
--- | Usage info.
+compilerOpts :: String -> IO (Options, [String])
+compilerOpts progName = do
+  argv <- getArgs
+  case getOpt Permute options argv of
+      (o, n, []  ) -> return (foldl (flip id) defaultOptions o, n)
+      (_, _, errs) -> ioError (userError (concat errs ++ "\n" ++ shortUsageHeader progName))
 
-usage :: String -> String
-usage progName = unlines
-  [ progName ++ ": Fixes whitespace issues."
+shortUsageHeader, usageHeader, usage :: String -> String
+
+shortUsageHeader progName =
+  "Usage: " ++ progName ++ " [-h|--help] [-v|--verbose] [--check] [--config CONFIG] [FILES]"
+
+usageHeader progName = unlines
+  [ shortUsageHeader progName
   , ""
-  , "Usage: " ++ progName ++ " [--check]"
-  , ""
-  , "This program should be run in the base directory."
-  , ""
-  , "The program does the following for every file listed in"
-  , ""
-  , defaultLoc
-  , ""
-  , "under the current directory:"
+  , "The program does the following"
   , ""
   , "* Removes trailing whitespace."
   , "* Removes trailing lines containing nothing but whitespace."
   , "* Ensures that the file ends in a newline character."
   , ""
-  , "With the --check flag the program does not change any files,"
-  , "it just checks if any files would have been changed. In this"
-  , "case it returns with a non-zero exit code."
+  , "for files specified in [FILES] or"
+  , ""
+  , "\t" ++ optConfig defaultOptions
+  , ""
+  , "under the current directory."
   , ""
   , "Background: Agda was reported to fail to compile on Windows"
   , "because a file did not end with a newline character (Agda"
   , "uses -Werror)."
+  , ""
+  , "Available options:"
   ]
-  where
-  list [x]      = x
-  list [x, y]   = x ++ " and " ++ y
-  list (x : xs) = x ++ ", " ++ list xs
+
+usage progName = usageInfo (usageHeader progName) options
+
+main :: IO ()
+main = do
+  progName <- getProgName
+  (opts, nonOpts) <- compilerOpts progName
+
+  -- check if the user asks for help
+  when (optHelp opts) $ putStr (usage progName) >> exitSuccess
+
+  -- check if the configuration file exists
+  configExist <- doesFileExist $ optConfig opts
+  unless (configExist || not (null nonOpts)) $ do
+    hPutStr stderr (unlines
+      [ "fix-whitespace.yaml is not found and there are no files specified as arguments."
+      , ""
+      , shortUsageHeader progName
+      ])
+    exitFailure
+
+  let mode    = optMode    opts
+      verbose = optVerbose opts
+      config  = optConfig  opts
+
+  files <- if not $ null nonOpts
+    then concat <$> traverse namesMatching nonOpts
+    else do
+      Config incDirs excDirs incFiles excFiles <- parseConfig config
+      base <- getCurrentDirectory
+      find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
+
+  changes <- mapM (fix mode verbose) files
+
+  when (or changes && mode == Check) exitFailure
 
 -- Directory filter
 validDir
@@ -115,8 +169,10 @@ never = return False
 -- | Fix a file. Only performs changes if the mode is 'Fix'. Returns
 -- 'True' iff any changes would have been performed in the 'Fix' mode.
 
-fix :: Mode -> FilePath -> IO Bool
-fix mode f = do
+fix :: Mode -> Verbose -> FilePath -> IO Bool
+fix mode verbose f = do
+  when verbose (putStrLn $ "[ Checking ] " ++ f)
+
   new <- withFile f ReadMode $ \h -> do
     hSetEncoding h utf8
     s <- Text.hGetContents h
@@ -126,9 +182,9 @@ fix mode f = do
     Nothing -> return False
     Just s  -> do
       hPutStrLn stderr $
-        "Whitespace violation " ++
+        "[ Violation " ++
         (if mode == Fix then "fixed" else "detected") ++
-        " in " ++ f ++ "."
+        " ] " ++ f ++ "."
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
           hSetEncoding h utf8
