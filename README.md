@@ -11,7 +11,7 @@ The program does the following
 
 for files specified in `[FILES]` or
 
-	fix-whitespace.yaml
+        fix-whitespace.yaml
 
 under the current directory.
 
