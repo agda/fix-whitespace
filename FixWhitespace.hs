@@ -7,7 +7,7 @@
 import Control.Monad
 
 import Data.Char as Char
-import Data.List (nub)
+import Data.List.Extra (nubOrd)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text  -- Strict IO.
@@ -148,21 +148,22 @@ main = do
       let excPatterns = (map (++ "*") excDirs)
                      ++ (map ("**/" ++) excFiles)
 
-      when verbose (do putStrLn "Include whitelist:"
-                       putStrLn (concatMap (++ "\n") incWhitelistPatterns)
+      when verbose $ do
+        putStrLn "Include whitelist:"
+        putStrLn (concatMap (++ "\n") incWhitelistPatterns)
 
-                       putStrLn "Exclude blacklist:"
-                       putStrLn (concatMap (++ "\n") excBlacklistPatterns)
+        putStrLn "Exclude blacklist:"
+        putStrLn (concatMap (++ "\n") excBlacklistPatterns)
 
-                       putStrLn "Include:"
-                       putStrLn (concatMap (++ "\n") incPatterns)
+        putStrLn "Include:"
+        putStrLn (concatMap (++ "\n") incPatterns)
 
-                       putStrLn "Exclude:"
-                       putStrLn (concatMap (++ "\n") excPatterns))
+        putStrLn "Exclude:"
+        putStrLn (concatMap (++ "\n") excPatterns)
 
       files0 <- getDirectoryFilesIgnore base incWhitelistPatterns excBlacklistPatterns
       files1 <- getDirectoryFilesIgnore base incPatterns excPatterns
-      return (nub (files0 ++ files1))
+      return (nubOrd (files0 ++ files1))
 
   changes <- mapM (fix mode verbose) files
 
