@@ -29,7 +29,7 @@ executable fix-whitespace
   build-depends:  base >= 4.9.0.0 && < 4.15
                 , directory >= 1.2.6.2 && < 1.4
                 , filepath >= 1.4.1.0 && < 1.5
-                , filepattern >= 0.1.1 && < 0.1.3
+                , filepattern >= 0.1.2 && < 0.1.3
                 , yaml >= 0.8.4 && < 0.12
 
   -- ASR (2018-10-16). Required for supporting GHC 8.4.1, 8.4.2 and

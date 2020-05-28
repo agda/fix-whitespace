@@ -135,17 +135,17 @@ main = do
       let incDirs = map (++ "/**/") incDirs0
       let excDirs = map (++ "/**/") excDirs0
 
-      -- File patterns to always include 
+      -- File patterns to always include
       -- when not matching an excluded file pattern
       let incWhitelistPatterns = concatMap (\d -> map (d ++) incFiles) incDirs
       -- File patterns to always exclude
       let excBlacklistPatterns = map ("**/" ++) excFiles
-      
+
       -- Files to include when not in an excluded directory
       -- and when not matching an excluded file pattern
       let incPatterns = map ("**/" ++) incFiles
       -- Directory and file patterns to exclude
-      let excPatterns = (map (++ "*") excDirs) 
+      let excPatterns = (map (++ "*") excDirs)
                      ++ (map ("**/" ++) excFiles)
 
       when verbose (do putStrLn "Include whitelist:"
@@ -153,7 +153,7 @@ main = do
 
                        putStrLn "Exclude blacklist:"
                        putStrLn (concatMap (++ "\n") excBlacklistPatterns)
-      
+
                        putStrLn "Include:"
                        putStrLn (concatMap (++ "\n") incPatterns)
 
