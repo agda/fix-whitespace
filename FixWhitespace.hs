@@ -15,8 +15,8 @@ import System.Directory ( getCurrentDirectory, doesFileExist)
 import System.Environment
 import System.Exit
 import System.FilePath
-import System.FilePath.Find
-import System.FilePath.Glob
+import System.FilePattern
+import System.FilePattern.Directory
 import System.IO
 import System.Console.GetOpt
 
@@ -125,53 +125,17 @@ main = do
       verbose = optVerbose opts
       config  = optConfig  opts
 
+  base <- getCurrentDirectory
+
   files <- if not $ null nonOpts
-    then concat <$> traverse namesMatching nonOpts
+    then getDirectoryFiles base nonOpts
     else do
       Config incDirs excDirs incFiles excFiles <- parseConfig config
-      base <- getCurrentDirectory
-      find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
+      getDirectoryFilesIgnore base (incDirs ++ incFiles) (excDirs ++ excFiles)
 
   changes <- mapM (fix mode verbose) files
 
   when (or changes && mode == Check) exitFailure
-
--- Directory filter
-validDir
-  :: FilePath
-     -- ^ The base directory.
-  -> [FilePath]
-     -- ^ The list of included directories.
-  -> [FilePath]
-     -- ^ The list of excluded directories if *not* included above.
-  -> RecursionPredicate
-validDir base incDirs excDirs =
-      foldr (||?) never  (test (~~?) <$> incDirs)
-  ||? foldr (&&?) always (test (/~?) <$> excDirs)
-  where
-  test op = op (fixPath <$> filePath) . (fixPath (addTrailingPathSeparator base) ++)
-
--- File filter
-validFile
-  :: FilePath
-     -- ^ The base directory.
-  -> [FilePath]
-     -- ^ The list of files to check.
-  -> [FilePath]
-     -- ^  The list of excluded file names if included above.
-  -> FindClause Bool
-validFile base incFiles excFiles =
-      foldr (||?) never  (test (~~?) <$> incFiles)
-  &&? foldr (&&?) always (test (/~?) <$> excFiles)
-  where
-  test op = op (fixPath <$> filePath) . (fixPath (addTrailingPathSeparator base) ++)
-
--- | Unconditionally return False.
-never :: FindClause Bool
-never = return False
-
--- | Fix a file. Only performs changes if the mode is 'Fix'. Returns
--- 'True' iff any changes would have been performed in the 'Fix' mode.
 
 fix :: Mode -> Verbose -> FilePath -> IO Bool
 fix mode verbose f = do
