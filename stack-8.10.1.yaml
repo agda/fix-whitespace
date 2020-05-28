@@ -27,6 +27,7 @@ extra-deps:
   - resourcet-1.2.3
   - unliftio-core-0.2.0.1
   - libyaml-0.1.2
+  - extra-1.7.2
   - filepattern-0.1.2
 
 packages:
