@@ -146,8 +146,10 @@ validDir
      -- ^ The list of excluded directories if *not* included above.
   -> RecursionPredicate
 validDir base incDirs excDirs =
-      foldr (||?) never  ((filePath ~~?) . (base </>) <$> incDirs)
-  ||? foldr (&&?) always ((filePath /~?) . (base </>) <$> excDirs)
+      foldr (||?) never  (test (~~?) <$> incDirs)
+  ||? foldr (&&?) always (test (/~?) <$> excDirs)
+  where
+  test op = op (fixPath <$> filePath) . (fixPath (addTrailingPathSeparator base) ++)
 
 -- File filter
 validFile
@@ -159,8 +161,10 @@ validFile
      -- ^  The list of excluded file names if included above.
   -> FindClause Bool
 validFile base incFiles excFiles =
-      foldr (||?) never  ((filePath ~~?) . (base </>) <$> incFiles)
-  &&? foldr (&&?) always ((filePath /~?) . (base </>) <$> excFiles)
+      foldr (||?) never  (test (~~?) <$> incFiles)
+  &&? foldr (&&?) always (test (/~?) <$> excFiles)
+  where
+  test op = op (fixPath <$> filePath) . (fixPath (addTrailingPathSeparator base) ++)
 
 -- | Unconditionally return False.
 never :: FindClause Bool
