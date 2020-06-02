@@ -1,8 +1,7 @@
 -- Liang-Ting Chen 2019-10-13:
--- this program is partially re-written such that
--- the configuration part is controllfed by an external
--- configuration file `fix-whitespace.yaml"
--- in the base directory instead.
+-- this program is partially re-written so that the configuration part is
+-- controlled by a configuration file `fix-whitespace.yaml" in the base
+-- directory instead.
 
 import Control.Monad
 
