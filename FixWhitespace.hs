@@ -7,6 +7,7 @@
 import Control.Monad
 
 import Data.Char as Char
+import Data.List.Extra (nubOrd)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text  -- Strict IO.
@@ -15,8 +16,8 @@ import System.Directory ( getCurrentDirectory, doesFileExist)
 import System.Environment
 import System.Exit
 import System.FilePath
-import System.FilePath.Find
-import System.FilePath.Glob
+import System.FilePattern
+import System.FilePattern.Directory
 import System.IO
 import System.Console.GetOpt
 
@@ -125,53 +126,51 @@ main = do
       verbose = optVerbose opts
       config  = optConfig  opts
 
+  base <- getCurrentDirectory
+
   files <- if not $ null nonOpts
-    then concat <$> traverse namesMatching nonOpts
+    then getDirectoryFiles base nonOpts
     else do
-      Config incDirs excDirs incFiles excFiles <- parseConfig config
-      base <- getCurrentDirectory
-      find (validDir base incDirs excDirs) (validFile base incFiles excFiles) base
+      Config incDirs0 excDirs0 incFiles excFiles <- parseConfig config
+      let incDirs = map (++ "/**/") incDirs0
+      let excDirs = map (++ "/**/") excDirs0
+
+      -- File patterns to always include
+      -- when not matching an excluded file pattern
+      let incWhitelistPatterns = concatMap (\d -> map (d ++) incFiles) incDirs
+      -- File patterns to always exclude
+      let excBlacklistPatterns = map ("**/" ++) excFiles
+
+      -- Files to include when not in an excluded directory
+      -- and when not matching an excluded file pattern
+      let incPatterns = map ("**/" ++) incFiles
+      -- Directory and file patterns to exclude
+      let excPatterns = (map (++ "*") excDirs)
+                     ++ (map ("**/" ++) excFiles)
+
+      when verbose $ do
+        putStrLn "Include whitelist:"
+        putStrLn (concatMap (++ "\n") incWhitelistPatterns)
+
+        putStrLn "Exclude blacklist:"
+        putStrLn (concatMap (++ "\n") excBlacklistPatterns)
+
+        putStrLn "Include:"
+        putStrLn (concatMap (++ "\n") incPatterns)
+
+        putStrLn "Exclude:"
+        putStrLn (concatMap (++ "\n") excPatterns)
+
+      files0 <- getDirectoryFilesIgnore base incWhitelistPatterns excBlacklistPatterns
+      files1 <- getDirectoryFilesIgnore base incPatterns excPatterns
+      return (nubOrd (files0 ++ files1))
 
   changes <- mapM (fix mode verbose) files
 
   when (or changes && mode == Check) exitFailure
 
--- Directory filter
-validDir
-  :: FilePath
-     -- ^ The base directory.
-  -> [FilePath]
-     -- ^ The list of included directories.
-  -> [FilePath]
-     -- ^ The list of excluded directories if *not* included above.
-  -> RecursionPredicate
-validDir base incDirs excDirs =
-      foldr (||?) never  ((filePath ~~?) . (base </>) <$> incDirs)
-  ||? foldr (&&?) always ((filePath /~?) . (base </>) <$> excDirs)
-
--- File filter
-validFile
-  :: FilePath
-     -- ^ The base directory.
-  -> [FilePath]
-     -- ^ The list of files to check.
-  -> [FilePath]
-     -- ^  The list of excluded file names if included above.
-  -> FindClause Bool
-validFile base incFiles excFiles =
-      foldr (||?) never  ((filePath ~~?) . (base </>) <$> incFiles)
-  &&? foldr (&&?) always ((filePath /~?) . (base </>) <$> excFiles)
-
--- | Unconditionally return False.
-never :: FindClause Bool
-never = return False
-
--- | Fix a file. Only performs changes if the mode is 'Fix'. Returns
--- 'True' iff any changes would have been performed in the 'Fix' mode.
-
 fix :: Mode -> Verbose -> FilePath -> IO Bool
 fix mode verbose f = do
-  when verbose (putStrLn $ "[ Checking ] " ++ f)
 
   new <- withFile f ReadMode $ \h -> do
     hSetEncoding h utf8
@@ -179,12 +178,14 @@ fix mode verbose f = do
     let s' = transform s
     return $ if s' == s then Nothing else Just s'
   case new of
-    Nothing -> return False
+    Nothing -> do
+      when verbose (putStrLn $ "[ Checked ] " ++ f)
+      return False
     Just s  -> do
       hPutStrLn stderr $
         "[ Violation " ++
         (if mode == Fix then "fixed" else "detected") ++
-        " ] " ++ f ++ "."
+        " ] " ++ f
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
           hSetEncoding h utf8

@@ -5,3 +5,5 @@ packages:
 
 extra-deps:
   - text-1.2.3.1
+  - extra-1.7.1
+  - filepattern-0.1.2
