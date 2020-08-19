@@ -32,6 +32,3 @@ extra-deps:
   - clock-0.8
   - extra-1.7.2
   - filepattern-0.1.2
-
-packages:
-  - .

@@ -2,9 +2,6 @@ resolver: lts-11.22
 compiler: ghc-8.2.2
 compiler-check: match-exact
 
-packages:
-  - .
-
 extra-deps:
   - text-1.2.3.1
   - extra-1.7.1
