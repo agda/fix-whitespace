@@ -1,7 +1,6 @@
 resolver: lts-12.26
-
-packages:
-  - .
+compiler: ghc-8.4.4
+compiler-check: match-exact
 
 extra-deps:
   - extra-1.7.1

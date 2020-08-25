@@ -150,16 +150,16 @@ main = do
 
       when verbose $ do
         putStrLn "Include whitelist:"
-        putStrLn (concatMap (++ "\n") incWhitelistPatterns)
+        putStrLn (unlines incWhitelistPatterns)
 
         putStrLn "Exclude blacklist:"
-        putStrLn (concatMap (++ "\n") excBlacklistPatterns)
+        putStrLn (unlines excBlacklistPatterns)
 
         putStrLn "Include:"
-        putStrLn (concatMap (++ "\n") incPatterns)
+        putStrLn (unlines incPatterns)
 
         putStrLn "Exclude:"
-        putStrLn (concatMap (++ "\n") excPatterns)
+        putStrLn (unlines excPatterns)
 
       files0 <- getDirectoryFilesIgnore base incWhitelistPatterns excBlacklistPatterns
       files1 <- getDirectoryFilesIgnore base incPatterns excPatterns

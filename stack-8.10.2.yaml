@@ -1,5 +1,5 @@
-resolver: ghc-8.10.1
-compiler: ghc-8.10.1
+resolver: ghc-8.10.2
+compiler: ghc-8.10.2
 compiler-check: match-exact
 
 extra-deps:

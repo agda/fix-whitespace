@@ -1,7 +1,6 @@
-resolver: lts-15.4
-
-packages:
-  - .
+resolver: lts-16.5
+compiler: ghc-8.8.3
+compiler-check: match-exact
 
 extra-deps:
   - extra-1.7.2
