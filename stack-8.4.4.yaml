@@ -3,5 +3,4 @@ compiler: ghc-8.4.4
 compiler-check: match-exact
 
 extra-deps:
-  - extra-1.7.1
   - filepattern-0.1.2
