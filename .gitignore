@@ -1,6 +1,8 @@
 .stack-work/
+*.lock
+*.log
 dist/
 dist-newstyle/
 cabal.project.local
-*.lock
-*.log
+stack.yaml
+stack*.yaml.lock
