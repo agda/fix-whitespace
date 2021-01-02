@@ -28,7 +28,7 @@ executable fix-whitespace
   other-modules:    ParseConfig
   ghc-options:      -O2
 
-  build-depends:  base >= 4.9.0.0 && < 4.15
+  build-depends:  base >= 4.9.0.0 && < 4.16
                 , directory >= 1.2.6.2 && < 1.4
                 , filepath >= 1.4.1.0 && < 1.5
                 , filepattern >= 0.1.2 && < 0.1.3
