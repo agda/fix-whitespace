@@ -42,8 +42,6 @@ extra-deps:
   - vector-algorithms-0.8.0.4
   - yaml-0.11.5.0
 
-allow-newer: true
-
 flags:
   transformers-compat:
     five-three: true
