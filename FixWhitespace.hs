@@ -14,8 +14,8 @@ import qualified Data.Text.IO as Text  -- Strict IO.
 import System.Directory ( getCurrentDirectory, doesFileExist)
 import System.Environment
 import System.Exit
-import System.FilePath
-import System.FilePattern
+-- import System.FilePath
+-- import System.FilePattern
 import System.FilePattern.Directory
 import System.IO
 import System.Console.GetOpt
@@ -40,6 +40,7 @@ data Options = Options
   -- ^ The location to the configuration file.
   }
 
+defaultOptions :: Options
 defaultOptions = Options
   { optVerbose = False
   , optHelp    = False
@@ -214,8 +215,8 @@ transform =
                              n = 8 - p `mod` 8
   convertOne (a, p) c = (c:a, p+1)
 
-  addSpaces 0 x = x
-  addSpaces n x = addSpaces (n-1) (' ':x)
+  addSpaces :: Int -> String -> String
+  addSpaces n = (replicate n ' ' ++)
 
 -- | 'dropWhile' except keep the first of the dropped elements
 dropWhile1 :: (a -> Bool) -> [a] -> [a]

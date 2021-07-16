@@ -32,8 +32,9 @@ instance FromJSON RawConfig where
     v .:? "excluded-files"
   parseJSON _ = fail "Expected Object for Config value"
 
-parseRawConfig :: FilePath -> IO (Either Y.ParseException RawConfig)
-parseRawConfig = Y.decodeFileEither
+-- -- UNUSED
+-- parseRawConfig :: FilePath -> IO (Either Y.ParseException RawConfig)
+-- parseRawConfig = Y.decodeFileEither
 
 parseConfig :: FilePath -> IO Config
 parseConfig fp = do

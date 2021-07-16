@@ -48,3 +48,7 @@ executable fix-whitespace
   -- The other GHC versions can restrict to >= 1.2.3.1.
   if impl(ghc < 8.4.1) || impl(ghc > 8.4.3)
     build-depends: text >= 1.2.3.1
+
+  ghc-options:
+    -Wall
+    -Wcompat
