@@ -2,6 +2,10 @@
 
 Version history.
 
+## X.Y.Z released XXXX-XX-XX
+
+- Supported GHC 8.10.6.
+
 ## 0.0.6 released 2021-07-29
 
 - Fix the release version: The tag `0.0.5` on the GitHub repo was released on 14 Oct 2019 while `0.0.5` on Hackage is the commit `1394ec6`.
