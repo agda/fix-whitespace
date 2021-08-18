@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        ghc-ver: [9.0.1, 8.10.5, 8.10.4, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        ghc-ver: [9.0.1, 8.10.6, 8.10.5, 8.10.4, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
     env:
       ARGS: "--stack-yaml stack-${{ matrix.ghc-ver }}.yaml --no-terminal --system-ghc"
 
