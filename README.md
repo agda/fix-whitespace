@@ -1,7 +1,7 @@
 fix-whitespace: Fixes whitespace issues
 =======================================
 
-[![Hackage version](https://img.shields.io/hackage/v/fix-whitespace.svg?label=Hackage)](http://hackage.haskell.org/package/fix-whitespace)
+[![Hackage version](https://img.shields.io/hackage/v/fix-whitespace.svg?label=Hackage&color=informational)](http://hackage.haskell.org/package/fix-whitespace)
 [![Hackage CI](https://matrix.hackage.haskell.org/api/v2/packages/fix-whitespace/badge)](https://matrix.hackage.haskell.org/package/fix-whitespace)
 [![fix-whitespace on Stackage Nightly](https://stackage.org/package/fix-whitespace/badge/nightly)](https://stackage.org/nightly/package/fix-whitespace)
 [![Stackage LTS version](https://www.stackage.org/package/fix-whitespace/badge/lts?label=Stackage)](https://www.stackage.org/package/fix-whitespace)
