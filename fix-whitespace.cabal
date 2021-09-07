@@ -1,5 +1,5 @@
 name:            fix-whitespace
-version:         0.0.7
+version:         0.0.8
 cabal-version:   >= 1.10
 build-type:      Simple
 description:     Removes trailing whitespace, lines containing only whitespace and ensure that every file ends in a newline character.
