@@ -2,7 +2,7 @@
 
 Version history.
 
-## X.Y.Z released XXXX-XX-XX
+## 0.0.7 released 2021-09-07
 
 - Supported GHC 8.10.7.
 
