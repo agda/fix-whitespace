@@ -1,7 +1,4 @@
--- Liang-Ting Chen 2019-10-13:
--- this program is partially re-written so that the configuration part is
--- controlled by a configuration file `fix-whitespace.yaml" in the base
--- directory instead.
+-- | Program to enforce a whitespace policy.
 
 import Control.Monad
 
@@ -21,6 +18,11 @@ import System.IO
 import System.Console.GetOpt
 
 import ParseConfig
+
+-- | Default configuration file.
+
+defaultConfigFile :: String
+defaultConfigFile = "fix-whitespace.yaml"
 
 -- Modes.
 data Mode
@@ -45,7 +47,7 @@ defaultOptions = Options
   { optVerbose = False
   , optHelp    = False
   , optMode    = Fix
-  , optConfig  = "fix-whitespace.yaml"
+  , optConfig  = defaultConfigFile
   }
 
 options :: [OptDescr (Options -> Options)]
@@ -58,7 +60,7 @@ options =
       "Show files as they are being checked."
   , Option []        ["config"]
       (ReqArg (\loc opts -> opts { optConfig = loc }) "CONFIG")
-      "Override the project configuration fix-whitespace.yaml."
+      (concat ["Override the project configuration ", defaultConfigFile, "."])
   , Option []        ["check"]
       (NoArg (\opts -> opts { optMode = Check }))
       (unlines
@@ -68,26 +70,28 @@ options =
         ])
   ]
 
-compilerOpts :: String -> IO (Options, [String])
-compilerOpts progName = do
+programOpts :: String -> IO (Options, [String])
+programOpts progName = do
   argv <- getArgs
   case getOpt Permute options argv of
       (o, n, []  ) -> return (foldl (flip id) defaultOptions o, n)
-      (_, _, errs) -> ioError (userError (concat errs ++ "\n" ++ shortUsageHeader progName))
+      (_, _, errs) -> ioError $ userError $ concat errs ++ "\n" ++ shortUsageHeader progName
 
-shortUsageHeader, usageHeader, usage :: String -> String
 
+shortUsageHeader :: String -> String
 shortUsageHeader progName =
   "Usage: " ++ progName ++ " [-h|--help] [-v|--verbose] [--check] [--config CONFIG] [FILES]"
 
+usageHeader :: String -> String
 usageHeader progName = unlines
   [ shortUsageHeader progName
   , ""
   , "The program does the following"
   , ""
-  , "* Removes trailing whitespace."
-  , "* Removes trailing lines containing nothing but whitespace."
-  , "* Ensures that the file ends in a newline character."
+  , "  * Removes trailing whitespace."
+  , "  * Removes trailing lines containing nothing but whitespace."
+  , "  * Ensures that the file ends in a newline character."
+  , "  * Convert tabs to spaces, assuming a tab-size of 8."
   , ""
   , "for files specified in [FILES] or"
   , ""
@@ -95,19 +99,16 @@ usageHeader progName = unlines
   , ""
   , "under the current directory."
   , ""
-  , "Background: Agda was reported to fail to compile on Windows"
-  , "because a file did not end with a newline character (Agda"
-  , "uses -Werror)."
-  , ""
   , "Available options:"
   ]
 
+usage :: String -> String
 usage progName = usageInfo (usageHeader progName) options
 
 main :: IO ()
 main = do
   progName <- getProgName
-  (opts, nonOpts) <- compilerOpts progName
+  (opts, nonOpts) <- programOpts progName
 
   -- check if the user asks for help
   when (optHelp opts) $ putStr (usage progName) >> exitSuccess
@@ -115,11 +116,11 @@ main = do
   -- check if the configuration file exists
   configExist <- doesFileExist $ optConfig opts
   unless (configExist || not (null nonOpts)) $ do
-    hPutStr stderr (unlines
-      [ "fix-whitespace.yaml is not found and there are no files specified as arguments."
+    hPutStr stderr $ unlines
+      [ unwords [defaultConfigFile, "is not found and there are no files specified as arguments."]
       , ""
       , shortUsageHeader progName
-      ])
+      ]
     exitFailure
 
   let mode    = optMode    opts
