@@ -1,6 +1,7 @@
 -- | Program to enforce a whitespace policy.
 
 import Control.Monad
+import Control.Exception (IOException, handle)
 
 import Data.Char as Char
 import Data.List.Extra (nubOrd)
@@ -171,18 +172,15 @@ main = do
   when (or changes && mode == Check) exitFailure
 
 fix :: Mode -> Verbose -> FilePath -> IO Bool
-fix mode verbose f = do
+fix mode verbose f =
+  checkFile f >>= \case
 
-  new <- withFile f ReadMode $ \h -> do
-    hSetEncoding h utf8
-    s <- Text.hGetContents h
-    let s' = transform s
-    return $ if s' == s then Nothing else Just s'
-  case new of
-    Nothing -> do
-      when verbose (putStrLn $ "[ Checked ] " ++ f)
+    CheckOK -> do
+      when verbose $
+        putStrLn $ "[ Checked ] " ++ f
       return False
-    Just s  -> do
+
+    CheckViolation s  -> do
       hPutStrLn stderr $
         "[ Violation " ++
         (if mode == Fix then "fixed" else "detected") ++
@@ -192,6 +190,34 @@ fix mode verbose f = do
           hSetEncoding h utf8
           Text.hPutStr h s
       return True
+
+    CheckIOError _e -> do
+      hPutStrLn stderr $
+        "[ Read error ] " ++ f
+      return False
+
+-- | Result of checking a file against the whitespace policy.
+
+data CheckResult
+  = CheckOK
+      -- ^ The file satifies the policy.
+  | CheckViolation Text
+      -- ^ The file violates the policy, a fix is returned.
+  | CheckIOError IOException
+      -- ^ An I/O error occurred while accessing the file.
+      --   (E.g., the file is not UTF8 encoded.)
+
+-- | Check a file against the whitespace policy,
+--   returning a fix if violations occurred.
+
+checkFile :: FilePath -> IO CheckResult
+checkFile f =
+  handle (\ (e :: IOException) -> return $ CheckIOError e) $
+    withFile f ReadMode $ \ h -> do
+      hSetEncoding h utf8
+      s <- Text.hGetContents h
+      let s' = transform s
+      return $ if s' == s then CheckOK else CheckViolation s'
 
 -- | Transforms the contents of a file.
 
