@@ -6,6 +6,7 @@ import Control.Exception (IOException, handle)
 import Data.Char as Char
 import Data.List.Extra (nubOrd)
 import Data.Text (Text)
+import Data.Version (showVersion)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text  -- Strict IO.
 
@@ -19,6 +20,7 @@ import System.IO
 import System.Console.GetOpt
 
 import ParseConfig
+import qualified Paths_fix_whitespace as PFW (version)
 
 -- | Default configuration file.
 
@@ -38,6 +40,8 @@ data Options = Options
   -- ^ Display the location of a file being checked or not.
   , optHelp    :: Bool
   -- ^ Display the help information.
+  , optVersion :: Bool
+  -- ^ Display the program's version.
   , optMode    :: Mode
   , optConfig  :: FilePath
   -- ^ The location to the configuration file.
@@ -47,6 +51,7 @@ defaultOptions :: Options
 defaultOptions = Options
   { optVerbose = False
   , optHelp    = False
+  , optVersion = False
   , optMode    = Fix
   , optConfig  = defaultConfigFile
   }
@@ -56,6 +61,9 @@ options =
   [ Option ['h']     ["help"]
       (NoArg (\opts -> opts { optHelp = True }))
       "Show this help information."
+  , Option []        ["version"]
+      (NoArg (\opts -> opts { optVersion = True }))
+      "Show the program's version."
   , Option ['v']     ["verbose"]
       (NoArg (\opts -> opts { optVerbose = True }))
       "Show files as they are being checked."
@@ -113,6 +121,9 @@ main = do
 
   -- check if the user asks for help
   when (optHelp opts) $ putStr (usage progName) >> exitSuccess
+
+  -- check if the user asks for the program's version
+  when (optVersion opts) $ putStrLn (showVersion PFW.version) >> exitSuccess
 
   -- check if the configuration file exists
   configExist <- doesFileExist $ optConfig opts
