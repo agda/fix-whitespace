@@ -1,6 +1,6 @@
 name:            fix-whitespace
 version:         0.0.8
-cabal-version:   2.0
+cabal-version:   1.24
 build-type:      Simple
 description:     Removes trailing whitespace, lines containing only whitespace and ensure that every file ends in a newline character.
 license:         OtherLicense
@@ -44,7 +44,6 @@ executable fix-whitespace
   main-is:          FixWhitespace.hs
   other-modules:    ParseConfig
                     Paths_fix_whitespace
-  autogen-modules:  Paths_fix_whitespace
   default-language: Haskell2010
   default-extensions:
     LambdaCase
