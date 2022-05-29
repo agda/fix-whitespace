@@ -2,9 +2,14 @@
 
 Version history.
 
+## 0.0.8 released 2022-05-29
+
+- New option `--version` displaying program version.
+- Tested with GHC 8.0.2 - 9.4.1 alpha.
+
 ## 0.0.7 released 2021-09-07
 
-- Supported GHC 8.10.7.
+- Support GHC 8.10.7.
 
 ## 0.0.6 released 2021-07-29
 
@@ -14,5 +19,5 @@ Version history.
 
 ## 0.0.5 released 2021-03-11
 
-- initial release.
-- tested with GHC 8.0.2 - 9.0.1.
+- Initial release.
+- Tested with GHC 8.0.2 - 9.0.1.
