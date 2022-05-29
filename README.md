@@ -2,11 +2,10 @@ fix-whitespace: Fixes whitespace issues
 =======================================
 
 [![Hackage version](https://img.shields.io/hackage/v/fix-whitespace.svg?label=Hackage&color=informational)](http://hackage.haskell.org/package/fix-whitespace)
-[![Hackage CI](https://matrix.hackage.haskell.org/api/v2/packages/fix-whitespace/badge)](https://matrix.hackage.haskell.org/package/fix-whitespace)
 [![fix-whitespace on Stackage Nightly](https://stackage.org/package/fix-whitespace/badge/nightly)](https://stackage.org/nightly/package/fix-whitespace)
 [![Stackage LTS version](https://www.stackage.org/package/fix-whitespace/badge/lts?label=Stackage)](https://www.stackage.org/package/fix-whitespace)
 [![Build status](https://github.com/agda/fix-whitespace/workflows/Build%20by%20Stack/badge.svg)](https://github.com/agda/fix-whitespace/actions)
-
+[![Haskell-CI](https://github.com/agda/fix-whitespace/actions/workflows/haskell-ci.yml/badge.svg)](https://github.com/agda/fix-whitespace/actions/workflows/haskell-ci.yml)
 
 This tool can keep your project and repository clean of trailing
 whitespace and missing terminal newline.

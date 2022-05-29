@@ -1,5 +1,7 @@
 -- | Program to enforce a whitespace policy.
 
+module Main where
+
 import Control.Monad
 import Control.Exception (IOException, handle)
 
