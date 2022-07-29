@@ -2,10 +2,15 @@
 
 Version history.
 
+## 0.0.9 released 2022-07-29
+
+- New option `--tab` to set tab-size or keep tabs.
+- Tested with GHC 8.0.2 - 9.2.3 and 9.4.1 alpha.
+
 ## 0.0.8 released 2022-05-29
 
 - New option `--version` displaying program version.
-- Tested with GHC 8.0.2 - 9.4.1 alpha.
+- Tested with GHC 8.0.2 - 9.2.2 and 9.4.1 alpha.
 
 ## 0.0.7 released 2021-09-07
 

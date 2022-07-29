@@ -12,7 +12,7 @@ import Data.Version (showVersion)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text  -- Strict IO.
 
-import System.Directory ( getCurrentDirectory, doesFileExist)
+import System.Directory (getCurrentDirectory, doesFileExist)
 import System.Environment
 import System.Exit
 -- import System.FilePath
@@ -20,6 +20,8 @@ import System.Exit
 import System.FilePattern.Directory
 import System.IO
 import System.Console.GetOpt
+
+import Text.Read (readMaybe)
 
 import ParseConfig
 import qualified Paths_fix_whitespace as PFW (version)
@@ -29,6 +31,11 @@ import qualified Paths_fix_whitespace as PFW (version)
 defaultConfigFile :: String
 defaultConfigFile = "fix-whitespace.yaml"
 
+-- | Default tab size.
+
+defaultTabSize :: String
+defaultTabSize = "8"
+
 -- Modes.
 data Mode
   = Fix    -- ^ Fix whitespace issues.
@@ -36,6 +43,7 @@ data Mode
     deriving (Show, Eq)
 
 type Verbose = Bool
+type TabSize = Int
 
 data Options = Options
   { optVerbose :: Verbose
@@ -47,6 +55,8 @@ data Options = Options
   , optMode    :: Mode
   , optConfig  :: FilePath
   -- ^ The location to the configuration file.
+  , optTabSize :: String
+  -- ^ The number of spaces to expand a tab character to.  @"0"@ for keeping tabs.
   }
 
 defaultOptions :: Options
@@ -56,6 +66,7 @@ defaultOptions = Options
   , optVersion = False
   , optMode    = Fix
   , optConfig  = defaultConfigFile
+  , optTabSize = defaultTabSize
   }
 
 options :: [OptDescr (Options -> Options)]
@@ -69,6 +80,12 @@ options =
   , Option ['v']     ["verbose"]
       (NoArg (\opts -> opts { optVerbose = True }))
       "Show files as they are being checked."
+  , Option ['t']     ["tab"]
+      (ReqArg (\ts opts -> opts { optTabSize = ts }) "TABSIZE")
+      (unlines
+        [ "Expand tab characters to TABSIZE (default: " ++ defaultTabSize ++ ") many spaces."
+        , "Keep tabs if 0 is given as TABSIZE."
+        ])
   , Option []        ["config"]
       (ReqArg (\loc opts -> opts { optConfig = loc }) "CONFIG")
       (concat ["Override the project configuration ", defaultConfigFile, "."])
@@ -77,7 +94,7 @@ options =
       (unlines
         [ "With --check the program does not change any files,"
         , "it just checks if any files would have been changed."
-        , "In this case it returns with a non-zero exit code."
+        , "In the latter case it returns with a non-zero exit code."
         ])
   ]
 
@@ -90,8 +107,11 @@ programOpts progName = do
 
 
 shortUsageHeader :: String -> String
-shortUsageHeader progName =
-  "Usage: " ++ progName ++ " [-h|--help] [-v|--verbose] [--check] [--config CONFIG] [FILES]"
+shortUsageHeader progName = unwords
+  [ "Usage:"
+  , progName
+  , "[-h|--help] [-v|--verbose] [--check] [--config CONFIG] [-t|--tab TABSIZE] [FILES]"
+  ]
 
 usageHeader :: String -> String
 usageHeader progName = unlines
@@ -102,11 +122,11 @@ usageHeader progName = unlines
   , "  * Removes trailing whitespace."
   , "  * Removes trailing lines containing nothing but whitespace."
   , "  * Ensures that the file ends in a newline character."
-  , "  * Convert tabs to spaces, assuming a tab-size of 8."
+  , "  * Convert tabs to TABSIZE (default: " ++ defaultTabSize ++ ") spaces, unless TABSIZE is set to 0."
   , ""
   , "for files specified in [FILES] or"
   , ""
-  , "\t" ++ optConfig defaultOptions
+  , "\t" ++ defaultConfigFile
   , ""
   , "under the current directory."
   , ""
@@ -140,6 +160,9 @@ main = do
   let mode    = optMode    opts
       verbose = optVerbose opts
       config  = optConfig  opts
+
+  tabSize <- maybe (die "Error: Illegal TABSIZE, must be an integer.") return $
+    readMaybe $ optTabSize opts
 
   base <- getCurrentDirectory
 
@@ -180,13 +203,13 @@ main = do
       files1 <- getDirectoryFilesIgnore base incPatterns excPatterns
       return (nubOrd (files0 ++ files1))
 
-  changes <- mapM (fix mode verbose) files
+  changes <- mapM (fix mode verbose tabSize) files
 
   when (or changes && mode == Check) exitFailure
 
-fix :: Mode -> Verbose -> FilePath -> IO Bool
-fix mode verbose f =
-  checkFile f >>= \case
+fix :: Mode -> Verbose -> TabSize -> FilePath -> IO Bool
+fix mode verbose tabSize f =
+  checkFile tabSize f >>= \case
 
     CheckOK -> do
       when verbose $
@@ -223,19 +246,22 @@ data CheckResult
 -- | Check a file against the whitespace policy,
 --   returning a fix if violations occurred.
 
-checkFile :: FilePath -> IO CheckResult
-checkFile f =
+checkFile :: TabSize -> FilePath -> IO CheckResult
+checkFile tabSize f =
   handle (\ (e :: IOException) -> return $ CheckIOError e) $
     withFile f ReadMode $ \ h -> do
       hSetEncoding h utf8
       s <- Text.hGetContents h
-      let s' = transform s
+      let s' = transform tabSize s
       return $ if s' == s then CheckOK else CheckViolation s'
 
 -- | Transforms the contents of a file.
 
-transform :: Text -> Text
-transform =
+transform
+  :: TabSize   -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
+  -> Text      -- ^ Text before transformation.
+  -> Text      -- ^ Text after transformation.
+transform tabSize =
   Text.unlines .
   removeFinalEmptyLinesExceptOne .
   map (removeTrailingWhitespace .  convertTabs) .
@@ -247,12 +273,12 @@ transform =
   removeTrailingWhitespace =
     Text.dropWhileEnd ((`elem` [Space,Format]) . generalCategory)
 
-  convertTabs =
+  convertTabs = if tabSize <= 0 then id else
     Text.pack . reverse . fst . foldl convertOne ([], 0) . Text.unpack
 
   convertOne (a, p) '\t' = (addSpaces n a, p + n)
                            where
-                             n = 8 - p `mod` 8
+                             n = tabSize - p `mod` tabSize  -- Here, tabSize > 0 is guaranteed
   convertOne (a, p) c = (c:a, p+1)
 
   addSpaces :: Int -> String -> String

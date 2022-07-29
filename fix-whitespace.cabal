@@ -1,8 +1,9 @@
 name:            fix-whitespace
-version:         0.0.8
+version:         0.0.9
 cabal-version:   1.24
 build-type:      Simple
-description:     Removes trailing whitespace, lines containing only whitespace and ensure that every file ends in a newline character.
+description:     Removes trailing whitespace, lines containing only whitespace, expands tabs,
+                 and ensures that every file ends in a newline character.
 license:         OtherLicense
 license-file:    LICENSE
 author:          fix-whitespace was originally written by Nils Anders Danielsson as part of Agda 2 with contributions from Ulf Norell, Andrés Sicard-Ramírez, Andreas Abel, Philipp Hausmann, Jesper Cockx, Vlad Semenov, and Liang-Ting Chen.
