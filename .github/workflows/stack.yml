@@ -1,18 +1,26 @@
 name: Build by Stack
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - ci*
+  pull_request:
+    branches:
+      - master
+      - ci*
 
 jobs:
   check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        ghc-ver: [9.2.2, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        ghc-ver: [9.2.3, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
       fail-fast: false
     env:
       ARGS: "--stack-yaml stack-${{ matrix.ghc-ver }}.yaml --no-terminal --system-ghc"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: haskell/actions/setup@v1
       id: haskell-setup
       with:
@@ -25,7 +33,7 @@ jobs:
         export STACK_VER=$(stack --numeric-version)
         echo "STACK_VER=${STACK_VER}" >> ${GITHUB_ENV}
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache dependencies
       id: cache
       with:
