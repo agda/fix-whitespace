@@ -4,12 +4,16 @@ Version history.
 
 ## 0.0.9 released 2022-07-29
 
-- New option `--tab` to set tab-size or keep tabs.
+- New option `--tab` to set tab-size or keep tabs
+  [#31](https://github.com/agda/fix-whitespace/issues/31).
 - Tested with GHC 8.0.2 - 9.2.3 and 9.4.1 alpha.
 
 ## 0.0.8 released 2022-05-29
 
-- New option `--version` displaying program version.
+- New option `--version` displaying program version
+  [#33](https://github.com/agda/fix-whitespace/pull/33).
+- Skip files that are not UTF8 encoded, rather than crashing
+  [#29](https://github.com/agda/fix-whitespace/issues/29).
 - Tested with GHC 8.0.2 - 9.2.2 and 9.4.1 alpha.
 
 ## 0.0.7 released 2021-09-07
