@@ -17,7 +17,7 @@ import System.Environment
 import System.Exit
 -- import System.FilePath
 -- import System.FilePattern
-import System.FilePattern.Directory
+import System.FilePattern.Directory (getDirectoryFiles, getDirectoryFilesIgnore)
 import System.IO
 import System.Console.GetOpt
 

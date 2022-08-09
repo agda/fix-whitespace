@@ -2,11 +2,11 @@
 
 Version history.
 
-## 0.0.9 released 2022-07-29
+## 0.0.9 released 2022-08-10
 
 - New option `--tab` to set tab-size or keep tabs
   [#31](https://github.com/agda/fix-whitespace/issues/31).
-- Tested with GHC 8.0.2 - 9.2.3 and 9.4.1 alpha.
+- Tested with GHC 8.0.2 - 9.4.1.
 
 ## 0.0.8 released 2022-05-29
 
