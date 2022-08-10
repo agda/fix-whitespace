@@ -19,6 +19,7 @@ configuration file `fix-whitespace.yaml` under the current directory
   * Remove trailing whitespace.
   * Remove trailing lines containing nothing but whitespace.
   * Ensure that the file ends in a newline character.
+  * Expand tabs to spaces (optionally).
 
 Available options:
 
@@ -38,10 +39,15 @@ Available options:
 
    Override the project configuration `fix-whitespace.yaml`.
 
+*  `--tab=TABSIZE`
+
+   Expand tab characters to TABSIZE (default: 8) many spaces.
+   Keep tabs if 0 is given as TABSIZE.  _(Option available since 0.0.9.)_
+
 *  `--check`
 
    With `--check` the program does not change any files,
    it just checks if any files would have been changed.
-   In this case it returns with a non-zero exit code.
+   In the latter case, it returns with a non-zero exit code.
 
 For an example configuration file see [the one of Agda](https://github.com/agda/agda/blob/f9a181685397517b5d14943ca88a1c0acacc2075/fix-whitespace.yaml).
