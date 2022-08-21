@@ -1,3 +1,6 @@
-resolver: lts-19.8
+resolver: lts-19.20
 compiler: ghc-9.0.2
 compiler-check: match-exact
+
+extra-deps:
+  - filepattern-0.1.3

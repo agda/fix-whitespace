@@ -2,6 +2,13 @@
 
 Version history.
 
+## 0.0.10 released 2022-08-21
+
+- Symlink problem
+  [#9](https://github.com/agda/fix-whitespace/issues/9)
+  fixed in dependency `filepattern-0.1.3`.
+- Tested with GHC 8.0.2 - 9.4.1.
+
 ## 0.0.9 released 2022-08-10
 
 - New option `--tab` to set tab-size or keep tabs

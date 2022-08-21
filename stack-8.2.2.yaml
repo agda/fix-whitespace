@@ -4,4 +4,4 @@ compiler-check: match-exact
 
 extra-deps:
   - text-1.2.3.1
-  - filepattern-0.1.2
+  - filepattern-0.1.3

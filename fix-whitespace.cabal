@@ -1,5 +1,5 @@
 name:            fix-whitespace
-version:         0.0.9
+version:         0.0.10
 cabal-version:   1.24
 build-type:      Simple
 description:     Removes trailing whitespace, lines containing only whitespace, expands tabs,
@@ -54,13 +54,14 @@ executable fix-whitespace
                 , directory    >= 1.2.6.2  &&  < 1.4
                 , extra        >= 1.1      &&  < 2.0
                 , filepath     >= 1.4.1.0  &&  < 1.5
-                , filepattern  >= 0.1.2    &&  < 0.1.3
+                , filepattern  >= 0.1.3    &&  < 0.2
+                    -- filepattern 0.1.3 fixes issue fix-whitespace#9
                 , text         >= 1.2.3.0  &&  < 1.3   || == 2.0.*
                 , yaml         >= 0.8.4    &&  < 0.12
 
   -- ASR (2018-10-16).
-  -- text-1.2.3.0 required for supporting GHC 8.4.1, 8.4.2 and
-  -- 8.4.3. See Issue #3277.
+  -- text-1.2.3.0 required for supporting GHC 8.4.1, 8.4.2 and 8.4.3.
+  -- See Agda issue #3277.
   -- The other GHC versions can restrict to >= 1.2.3.1.
   if impl(ghc < 8.4.1) || impl(ghc > 8.4.3)
     build-depends: text >= 1.2.3.1
