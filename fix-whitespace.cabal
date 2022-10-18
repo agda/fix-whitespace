@@ -13,7 +13,7 @@ maintainer:      Liang-Ting Chen <liang.ting.chen.tw@gmail.com>, Andreas Abel
 Category:        Text
 Synopsis:        Fixes whitespace issues.
 tested-with:
-  GHC == 9.4.1
+  GHC == 9.4.2
   GHC == 9.2.4
   GHC == 9.0.2
   GHC == 8.10.7
