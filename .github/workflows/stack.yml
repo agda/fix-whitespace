@@ -19,11 +19,18 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-20.04]
         ghc-ver: [9.2.4, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        include:
+          - os: windows-2022
+            ghc-ver: 9.2.4
+          - os: macos-11
+            ghc-ver: 9.2.4
       fail-fast: false
+
     env:
       ARGS: "--stack-yaml stack-${{ matrix.ghc-ver }}.yaml --no-terminal --system-ghc"
 
@@ -75,7 +82,7 @@ jobs:
     - name: Get fix-whitespace version
       run: |
         export FIXW_EXE=$(stack path --local-install-root ${ARGS})/bin/fix-whitespace
-        export FIXW_VERSION=$(${FIXW_EXE} --numeric-version)
+        export FIXW_VERSION=$(${FIXW_EXE} --version)
         # Save env variables for the next steps
         echo "FIXW_EXE=${FIXW_EXE}"         >> ${GITHUB_ENV}
         echo "FIXW_VERSION=${FIXW_VERSION}" >> ${GITHUB_ENV}
