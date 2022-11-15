@@ -39,6 +39,7 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc-ver }}
         stack-version: '2.9.1'
+        enable-stack: true
 
     - name: Set environment variables based on Haskell setup
       run: |
