@@ -164,7 +164,7 @@ jobs:
         && runner.os == 'Windows'
       shell: bash
       run: |
-        export FIXW_VER_EXE=fixw-${FIXW_VERSION}.exe
+        export FIXW_VER_EXE=fix-whitespace-${FIXW_VERSION}.exe
         cp -p ${FIXW_EXE}.exe ${FIXW_VER_EXE}
         # Save env variables for the next step
         echo "FIXW_VER_EXE=${FIXW_VER_EXE}" >> ${GITHUB_ENV}
