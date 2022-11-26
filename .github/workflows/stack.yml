@@ -46,6 +46,7 @@ jobs:
       # Conditional to ensure this deployment is only run once per action.
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
+        cabal sdist source
         export DIST_TGZ=$(cabal sdist source | tail -1)
         echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
 
