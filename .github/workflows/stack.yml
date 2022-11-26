@@ -58,7 +58,7 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.DIST_TGZ }}
         asset_name: ${{ env.DIST_TGZ }}
-        # asset_content_type: application/octet-stream
+        asset_content_type: application/octet-stream
 
 
   build:
@@ -160,7 +160,7 @@ jobs:
     #     upload_url: ${{ needs.create_release.outputs.upload_url }}
     #     asset_path: ${{ env.DIST_TGZ }}
     #     asset_name: ${{ env.DIST_TGZ }}
-    #     # asset_content_type: application/octet-stream
+    #     asset_content_type: application/octet-stream
 
 
     - name: Linux release preparation.
@@ -192,7 +192,7 @@ jobs:
     #     upload_url: ${{ needs.create_release.outputs.upload_url }}
     #     asset_path: ${{ env.FIXW_BIN }}
     #     asset_name: ${{ env.FIXW_BIN }}
-    #     # asset_content_type: application/octet-stream
+    #     asset_content_type: application/octet-stream
 
 
     - name: Mac release preparation.
@@ -223,7 +223,7 @@ jobs:
     #     upload_url: ${{ needs.create_release.outputs.upload_url }}
     #     asset_path: ${{ env.FIXW_BIN }}
     #     asset_name: ${{ env.FIXW_BIN }}
-    #     # asset_content_type: application/octet-stream
+    #     asset_content_type: application/octet-stream
 
 
     - name: Windows release preparation.
@@ -248,7 +248,7 @@ jobs:
     #     upload_url: ${{ needs.create_release.outputs.upload_url }}
     #     asset_path: ${{ env.FIXW_BIN }}
     #     asset_name: ${{ env.FIXW_BIN }}
-    #     # asset_content_type: application/octet-stream
+    #     asset_content_type: application/octet-stream
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -267,4 +267,4 @@ jobs:
         upload_url: ${{ needs.create_release.outputs.upload_url }}
         asset_path: ${{ env.FIXW_BIN }}
         asset_name: ${{ env.FIXW_BIN }}
-        # asset_content_type: application/octet-stream
+        asset_content_type: application/octet-stream
