@@ -49,8 +49,8 @@ jobs:
       # Conditional to ensure this deployment is only run once per action.
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
-        cabal sdist source
-        export DIST_TGZ=$(cabal sdist source | tail -1)
+        cabal sdist
+        export DIST_TGZ=$(cabal sdist | tail -1)
         echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
 
     - name: Source tarball release.
@@ -144,7 +144,7 @@ jobs:
     #     startsWith(github.ref, 'refs/tags/v')
     #     && matrix.ghc-ver == '9.2.5'
     #   run: |
-    #     export DIST_TGZ=$(cabal sdist source | tail -1)
+    #     export DIST_TGZ=$(cabal sdist | tail -1)
     #     echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
 
     # - name: Source tarball release.
