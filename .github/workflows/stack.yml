@@ -41,7 +41,7 @@ jobs:
         prerelease: false
         release_name: fix-whitespace ${{ github.ref }}
         tag_name: ${{ github.ref }}
-        body: fix-whitespace ${{ github.ref }} binary release
+        # body: fix-whitespace binary release created from ${{ github.ref }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
@@ -50,8 +50,10 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
         cabal sdist
-        export DIST_TGZ=$(cabal sdist | tail -1)
-        echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
+        export DIST_TGZ_PATH=$(cabal sdist | tail -1)
+        export DIST_TGZ_NAME=$(basename "${DIST_TGZ_PATH}")
+        echo "DIST_TGZ_PATH=${DIST_TGZ_PATH}" >> ${GITHUB_ENV}
+        echo "DIST_TGZ_NAME=${DIST_TGZ_NAME}" >> ${GITHUB_ENV}
 
     - name: Source tarball release.
       if: startsWith(github.ref, 'refs/tags/v')
@@ -60,8 +62,8 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.DIST_TGZ }}
-        asset_name: ${{ env.DIST_TGZ }}
+        asset_path: ${{ env.DIST_TGZ_PATH }}
+        asset_name: ${{ env.DIST_TGZ_NAME }}
         asset_content_type: application/octet-stream
 
 
