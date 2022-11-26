@@ -18,12 +18,56 @@ permissions:
   contents: write
 
 jobs:
-  check:
+
+  ## Release preparation
+  ##########################################################################
+
+  # From: https://github.com/RobLoach/node-raylib/blob/aca2956e9ed283e5e91b1c8f08fafd943b5d6344/.github/workflows/release.yml
+  create_release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+
+    - name: Create release
+      if: startsWith(github.ref, 'refs/tags/v')
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        draft: false
+        prerelease: false
+        release_name: Release fix-whitespace ${{ github.ref }}
+        tag_name: ${{ github.ref }}
+        body: Automated release of fix-whitespace ${{ github.ref }} binaries.
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Source tarball creation.
+      # Conditional to ensure this deployment is only run once per action.
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        export DIST_TGZ=$(cabal sdist source | tail -1)
+        echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
+
+    - name: Source tarball release.
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.DIST_TGZ }}
+        asset_name: ${{ env.DIST_TGZ }}
+        # asset_content_type: application/octet-stream
+
+
+  build:
     runs-on: ${{ matrix.os }}
+    needs: create_release
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        ghc-ver: [9.4.3, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        ghc-ver: [9.4.3, 9.2.5]  ##, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
         include:
           - os: windows-2022
             ghc-ver: 9.2.5
@@ -90,25 +134,33 @@ jobs:
     ## Release
     ########################################################################
 
-    - name: Source tarball creation.
-      # Conditional to ensure this deployment is only run once per action.
-      if: >-
-        startsWith(github.ref, 'refs/tags/v')
-        && matrix.ghc-ver == '9.2.5'
-      run: |
-        export DIST_TGZ=$(cabal sdist source | tail -1)
-        echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
+    # - name: Source tarball creation.
+    #   # Conditional to ensure this deployment is only run once per action.
+    #   if: >-
+    #     startsWith(github.ref, 'refs/tags/v')
+    #     && matrix.ghc-ver == '9.2.5'
+    #   run: |
+    #     export DIST_TGZ=$(cabal sdist source | tail -1)
+    #     echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
 
-    - name: Source tarball release.
-      if: >-
-        startsWith(github.ref, 'refs/tags/v')
-        && matrix.ghc-ver == '9.2.5'
-      uses: softprops/action-gh-release@v1
-      with:
-        draft: true
-        prerelease: true
-        files: |
-          ${{ env.DIST_TGZ }}
+    # - name: Source tarball release.
+    #   if: >-
+    #     startsWith(github.ref, 'refs/tags/v')
+    #     && matrix.ghc-ver == '9.2.5'
+    #   # uses: softprops/action-gh-release@v1
+    #   # with:
+    #   #   draft: true
+    #   #   prerelease: true
+    #   #   files: |
+    #   #     ${{ env.DIST_TGZ }}
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #   with:
+    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
+    #     asset_path: ${{ env.DIST_TGZ }}
+    #     asset_name: ${{ env.DIST_TGZ }}
+    #     # asset_content_type: application/octet-stream
 
 
     - name: Linux release preparation.
@@ -122,17 +174,25 @@ jobs:
         # Save env variables for the next step
         echo "FIXW_BIN=${FIXW_BIN}" >> ${GITHUB_ENV}
 
-    - name: Linux release.
-      if: >-
-        startsWith(github.ref, 'refs/tags/v')
-        && runner.os == 'Linux'
-        && matrix.ghc-ver == '9.2.5'
-      uses: softprops/action-gh-release@v1
-      with:
-        draft: true
-        prerelease: true
-        files: |
-          ${{ env.FIXW_BIN }}
+    # - name: Linux release.
+    #   if: >-
+    #     startsWith(github.ref, 'refs/tags/v')
+    #     && runner.os == 'Linux'
+    #     && matrix.ghc-ver == '9.2.5'
+    #   # uses: softprops/action-gh-release@v1
+    #   # with:
+    #   #   draft: true
+    #   #   prerelease: true
+    #   #   files: |
+    #   #     ${{ env.FIXW_BIN }}
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #   with:
+    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
+    #     asset_path: ${{ env.FIXW_BIN }}
+    #     asset_name: ${{ env.FIXW_BIN }}
+    #     # asset_content_type: application/octet-stream
 
 
     - name: Mac release preparation.
@@ -146,16 +206,24 @@ jobs:
         # Save env variables for the next step
         echo "FIXW_BIN=${FIXW_BIN}" >> ${GITHUB_ENV}
 
-    - name: Mac release.
-      if: >-
-        startsWith(github.ref, 'refs/tags/v')
-        && runner.os == 'macOS'
-      uses: softprops/action-gh-release@v1
-      with:
-        draft: true
-        prerelease: true
-        files: |
-          ${{ env.FIXW_BIN }}
+    # - name: Mac release.
+    #   if: >-
+    #     startsWith(github.ref, 'refs/tags/v')
+    #     && runner.os == 'macOS'
+    #   # uses: softprops/action-gh-release@v1
+    #   # with:
+    #   #   draft: true
+    #   #   prerelease: true
+    #   #   files: |
+    #   #     ${{ env.FIXW_BIN }}
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #   with:
+    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
+    #     asset_path: ${{ env.FIXW_BIN }}
+    #     asset_name: ${{ env.FIXW_BIN }}
+    #     # asset_content_type: application/octet-stream
 
 
     - name: Windows release preparation.
@@ -164,18 +232,39 @@ jobs:
         && runner.os == 'Windows'
       shell: bash
       run: |
-        export FIXW_VER_EXE=fix-whitespace-${FIXW_VERSION}.exe
-        cp -p ${FIXW_EXE}.exe ${FIXW_VER_EXE}
+        export FIXW_BIN=fix-whitespace-${FIXW_VERSION}.exe
+        cp -p ${FIXW_EXE}.exe ${FIXW_BIN}
         # Save env variables for the next step
-        echo "FIXW_VER_EXE=${FIXW_VER_EXE}" >> ${GITHUB_ENV}
+        echo "FIXW_BIN=${FIXW_BIN}" >> ${GITHUB_ENV}
 
-    - name: Windows release.
+    # - name: Windows release.
+    #   if: >-
+    #     startsWith(github.ref, 'refs/tags/v')
+    #     && runner.os == 'Windows'
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #   with:
+    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
+    #     asset_path: ${{ env.FIXW_BIN }}
+    #     asset_name: ${{ env.FIXW_BIN }}
+    #     # asset_content_type: application/octet-stream
+    #   # uses: softprops/action-gh-release@v1
+    #   # with:
+    #   #   draft: true
+    #   #   prerelease: true
+    #   #   files: |
+    #   #     ${{ env.FIXW_VER_EXE }}
+
+    - name: Upload binary.
       if: >-
         startsWith(github.ref, 'refs/tags/v')
-        && runner.os == 'Windows'
-      uses: softprops/action-gh-release@v1
+        && (matrix.ghc-ver == '9.2.5' || !(runner.os == 'Linux'))
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       with:
-        draft: true
-        prerelease: true
-        files: |
-          ${{ env.FIXW_VER_EXE }}
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_path: ${{ env.FIXW_BIN }}
+        asset_name: ${{ env.FIXW_BIN }}
+        # asset_content_type: application/octet-stream
