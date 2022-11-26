@@ -36,9 +36,9 @@ jobs:
       with:
         draft: false
         prerelease: false
-        release_name: Release fix-whitespace ${{ github.ref }}
+        release_name: fix-whitespace ${{ github.ref }}
         tag_name: ${{ github.ref }}
-        body: Automated release of fix-whitespace ${{ github.ref }} binaries.
+        body: fix-whitespace ${{ github.ref }} binary release
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
