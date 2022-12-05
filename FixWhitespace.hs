@@ -271,7 +271,7 @@ transform tabSize =
     reverse . dropWhile1 Text.null . reverse
 
   removeTrailingWhitespace =
-    Text.dropWhileEnd ((`elem` [Space,Format]) . generalCategory)
+    Text.dropWhileEnd $ \ c -> generalCategory c `elem` [Space,Format] || c == '\t'
 
   convertTabs = if tabSize <= 0 then id else
     Text.pack . reverse . fst . foldl convertOne ([], 0) . Text.unpack

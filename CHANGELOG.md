@@ -2,6 +2,12 @@
 
 Version history.
 
+## 0.0.11 Santa Clause edition released 2022-12-06
+
+- Delete trailing tabs even when `--tab=0`
+  [#42](https://github.com/agda/fix-whitespace/issues/42)
+- Tested with GHC 8.0.2 - 9.4.3.
+
 ## 0.0.10 released 2022-08-21
 
 - Symlink problem
