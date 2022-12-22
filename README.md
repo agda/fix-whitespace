@@ -51,3 +51,8 @@ Available options:
    In the latter case, it returns with a non-zero exit code.
 
 For an example configuration file see [the one of Agda](https://github.com/agda/agda/blob/f9a181685397517b5d14943ca88a1c0acacc2075/fix-whitespace.yaml).
+
+Continuous integration
+----------------------
+
+`fix-whitespace` comfortably integrates into your GitHub CI via the [`fix-whitespace-action`](https://github.com/andreasabel/fix-whitespace-action).
