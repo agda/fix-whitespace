@@ -13,7 +13,8 @@ maintainer:      Liang-Ting Chen <liang.ting.chen.tw@gmail.com>, Andreas Abel
 Category:        Text
 Synopsis:        Fixes whitespace issues.
 tested-with:
-  GHC == 9.4.3
+  GHC == 9.6.0
+  GHC == 9.4.4
   GHC == 9.2.5
   GHC == 9.0.2
   GHC == 8.10.7
@@ -23,7 +24,7 @@ tested-with:
   GHC == 8.2.2
   GHC == 8.0.2
 
-extra-source-files:
+extra-doc-files:
   CHANGELOG.md
   README.md
   fix-whitespace.yaml
@@ -36,7 +37,7 @@ extra-source-files:
   stack-9.0.2.yaml
   stack-9.2.4.yaml
   stack-9.2.5.yaml
-  stack-9.4.3.yaml
+  stack-9.4.4.yaml
 
 source-repository head
   type: git

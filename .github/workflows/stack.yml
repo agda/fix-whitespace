@@ -73,12 +73,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        ghc-ver: [9.4.3, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        ghc-ver: [9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
         include:
           - os: windows-2022
-            ghc-ver: 9.2.4
+            ghc-ver: 9.4.4
           - os: macos-12
-            ghc-ver: 9.2.5
+            ghc-ver: 9.4.4
       fail-fast: false
 
     env:
@@ -139,7 +139,7 @@ jobs:
     #   # Conditional to ensure this deployment is only run once per action.
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && matrix.ghc-ver == '9.2.5'
+    #     && matrix.ghc-ver == '9.4.4'
     #   run: |
     #     export DIST_TGZ=$(cabal sdist | tail -1)
     #     echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
@@ -147,7 +147,7 @@ jobs:
     # - name: Source tarball release.
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && matrix.ghc-ver == '9.2.5'
+    #     && matrix.ghc-ver == '9.4.4'
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -168,7 +168,7 @@ jobs:
       if: >-
         startsWith(github.ref, 'refs/tags/v')
         && runner.os == 'Linux'
-        && matrix.ghc-ver == '9.2.5'
+        && matrix.ghc-ver == '9.4.4'
       run: |
         export FIXW_BIN=fix-whitespace-${FIXW_VERSION}-linux.binary
         cp -p ${FIXW_EXE} ${FIXW_BIN}
@@ -179,7 +179,7 @@ jobs:
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
     #     && runner.os == 'Linux'
-    #     && matrix.ghc-ver == '9.2.5'
+    #     && matrix.ghc-ver == '9.4.4'
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -260,7 +260,7 @@ jobs:
     - name: Upload binary.
       if: >-
         startsWith(github.ref, 'refs/tags/v')
-        && (matrix.ghc-ver == '9.2.5' || !(runner.os == 'Linux'))
+        && (matrix.ghc-ver == '9.4.4' || !(runner.os == 'Linux'))
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
