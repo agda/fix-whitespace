@@ -1,8 +1,11 @@
 -- | Program to enforce a whitespace policy.
 
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Control.Monad
+import Control.Monad.Trans.Writer.CPS
 import Control.Exception (IOException, handle)
 
 import Data.Char as Char
@@ -216,11 +219,12 @@ fix mode verbose tabSize f =
         putStrLn $ "[ Checked ] " ++ f
       return False
 
-    CheckViolation s  -> do
+    CheckViolation s vs -> do
       hPutStrLn stderr $
         "[ Violation " ++
         (if mode == Fix then "fixed" else "detected") ++
-        " ] " ++ f
+        " ] " ++ f ++ ":\n" ++ (unlines $ map displayViolations vs)
+
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
           hSetEncoding h utf8
@@ -232,13 +236,26 @@ fix mode verbose tabSize f =
         "[ Read error ] " ++ f
       return False
 
+-- | Represents a line of input violating whitespace rules.
+--   Stores the index of the line and the line itself.
+data LineViolating = LV Int Text
+
+displayViolations :: LineViolating -> String
+displayViolations (LV i l) = "line " ++ show i ++ "] " ++
+  (Text.unpack $ visibleSpaces l)
+
+-- | The transformation monad: maintains info about lines that
+--   violate the rules.
+type TransformM = Writer [LineViolating]
+
 -- | Result of checking a file against the whitespace policy.
 
 data CheckResult
   = CheckOK
       -- ^ The file satifies the policy.
-  | CheckViolation Text
-      -- ^ The file violates the policy, a fix is returned.
+  | CheckViolation Text [LineViolating]
+      -- ^ The file violates the policy, a fix and a list of
+      --   violating lines are returned.
   | CheckIOError IOException
       -- ^ An I/O error occurred while accessing the file.
       --   (E.g., the file is not UTF8 encoded.)
@@ -252,26 +269,45 @@ checkFile tabSize f =
     withFile f ReadMode $ \ h -> do
       hSetEncoding h utf8
       s <- Text.hGetContents h
-      let s' = transform tabSize s
-      return $ if s' == s then CheckOK else CheckViolation s'
+      let (s', lvs) = transform tabSize s
+      return $ if s' == s then CheckOK else CheckViolation s' lvs
 
 -- | Transforms the contents of a file.
 
 transform
   :: TabSize   -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
   -> Text      -- ^ Text before transformation.
-  -> Text      -- ^ Text after transformation.
+  -> (Text, [LineViolating]) -- ^ Text after transformation and violating lines if any.
 transform tabSize =
-  Text.unlines .
-  removeFinalEmptyLinesExceptOne .
-  map (removeTrailingWhitespace .  convertTabs) .
+  runWriter .
+  fmap Text.unlines .
+  fixAllViolations .
+  zip [1..] .
   Text.lines
   where
-  removeFinalEmptyLinesExceptOne =
-    reverse . dropWhile1 Text.null . reverse
+  fixAllViolations :: [(Int,Text)] -> TransformM [Text]
+  fixAllViolations = removeFinalEmptyLinesExceptOne <=<
+    mapM (fixLineWith $ removeTrailingWhitespace . convertTabs)
+
+  removeFinalEmptyLinesExceptOne :: [Text] -> TransformM [Text]
+  removeFinalEmptyLinesExceptOne ls
+    | lenLs == lenLs'= pure ls
+    | otherwise = tell (map (uncurry LV) $ zip [1+lenLs' ..] els) >> pure ls'
+    where
+    ls' = reverse . dropWhile1 Text.null . reverse $ ls
+    lenLs = length ls
+    lenLs' = length ls'
+    els = replicate (lenLs - lenLs') ""
 
   removeTrailingWhitespace =
     Text.dropWhileEnd $ \ c -> generalCategory c `elem` [Space,Format] || c == '\t'
+
+  fixLineWith :: (Text -> Text) -> (Int, Text) -> TransformM Text
+  fixLineWith fixer (i, l)
+    | l == l' = pure l
+    | otherwise = tell [LV i l] >> pure l'
+    where l' = fixer l
+
 
   convertTabs = if tabSize <= 0 then id else
     Text.pack . reverse . fst . foldl convertOne ([], 0) . Text.unpack
@@ -290,3 +326,10 @@ dropWhile1 _ [] = []
 dropWhile1 p (x:xs)
   | p x       = x : dropWhile p xs
   | otherwise = x : xs
+
+-- | Replace spaces and tabs with visible characters for
+--   presentation purposes. Space turns into '·' and tab into '→'
+visibleSpaces :: Text -> Text
+visibleSpaces s
+  | Text.null s = "<empty line>"
+  | otherwise = Text.replace "\t" "→" . Text.replace " " "·" $ s
