@@ -5,7 +5,7 @@
 module Main where
 
 import Control.Monad
-import Control.Monad.Trans.Writer.CPS
+import Control.Monad.Trans.Writer.Strict
 import Control.Exception (IOException, handle)
 
 import Data.Char as Char
