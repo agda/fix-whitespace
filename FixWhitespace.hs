@@ -223,7 +223,9 @@ fix mode verbose tabSize f =
       hPutStrLn stderr $
         "[ Violation " ++
         (if mode == Fix then "fixed" else "detected") ++
-        " ] " ++ f ++ ":\n" ++ (unlines $ map displayViolations vs)
+        " ] " ++ f ++
+        (if mode == Fix then "" else
+           ":\n" ++ (unlines $ map (displayViolations f) vs))
 
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
@@ -240,8 +242,8 @@ fix mode verbose tabSize f =
 --   Stores the index of the line and the line itself.
 data LineViolating = LV Int Text
 
-displayViolations :: LineViolating -> String
-displayViolations (LV i l) = "line " ++ show i ++ "] " ++
+displayViolations :: FilePath -> LineViolating -> String
+displayViolations fname (LV i l) = fname ++ ":" ++ show i ++ ": " ++
   (Text.unpack $ visibleSpaces l)
 
 -- | The transformation monad: maintains info about lines that
@@ -331,5 +333,5 @@ dropWhile1 p (x:xs)
 --   presentation purposes. Space turns into '·' and tab into '→'
 visibleSpaces :: Text -> Text
 visibleSpaces s
-  | Text.null s = "<empty line>"
-  | otherwise = Text.replace "\t" "→" . Text.replace " " "·" $ s
+  | Text.null s = "<NEWLINE>"
+  | otherwise = Text.replace "\t" "<TAB>" . Text.replace " " "·" $ s
