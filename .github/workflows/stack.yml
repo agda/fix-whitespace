@@ -48,10 +48,10 @@ jobs:
     - name: Source tarball creation
       run: |
         cabal sdist
-        export DIST_TGZ_PATH=$(cabal sdist | tail -1)
-        export DIST_TGZ_NAME=$(basename "${DIST_TGZ_PATH}")
-        echo "DIST_TGZ_PATH=${DIST_TGZ_PATH}" >> ${GITHUB_ENV}
-        echo "DIST_TGZ_NAME=${DIST_TGZ_NAME}" >> ${GITHUB_ENV}
+        DIST_TGZ_PATH=$(cabal sdist | tail -1)
+        DIST_TGZ_NAME=$(basename "${DIST_TGZ_PATH}")
+        echo "DIST_TGZ_PATH=${DIST_TGZ_PATH}" >> "${GITHUB_ENV}"
+        echo "DIST_TGZ_NAME=${DIST_TGZ_NAME}" >> "${GITHUB_ENV}"
 
     - name: Source tarball release
       uses: actions/upload-release-asset@v1
@@ -95,7 +95,7 @@ jobs:
     - name: Workaround runner image issue (ghcup, Linux)
       if: ${{ runner.os == 'Linux' }}
       # https://github.com/actions/runner-images/issues/7061
-      run: sudo chown -R $USER /usr/local/.ghcup
+      run: sudo chown -R "$USER" /usr/local/.ghcup
 
     - uses: haskell/actions/setup@v2
       id: haskell-setup
@@ -106,8 +106,8 @@ jobs:
 
     - name: Set environment variables based on Haskell setup
       run: |
-        export STACK_VER=$(stack --numeric-version)
-        echo "STACK_VER=${STACK_VER}" >> ${GITHUB_ENV}
+        STACK_VER=$(stack --numeric-version)
+        echo "STACK_VER=${STACK_VER}" >> "${GITHUB_ENV}"
 
     - uses: actions/cache@v3
       name: Cache dependencies
@@ -134,11 +134,11 @@ jobs:
 
     - name: Get fix-whitespace version
       run: |
-        export FIXW_EXE=$(stack path --local-install-root ${ARGS})/bin/fix-whitespace
-        export FIXW_VERSION=$(${FIXW_EXE} --version)
+        FIXW_EXE=$(stack path --local-install-root ${ARGS})/bin/fix-whitespace
+        FIXW_VERSION=$("${FIXW_EXE}" --version)
         # Save env variables for the next steps
-        echo "FIXW_EXE=${FIXW_EXE}"         >> ${GITHUB_ENV}
-        echo "FIXW_VERSION=${FIXW_VERSION}" >> ${GITHUB_ENV}
+        echo "FIXW_EXE=${FIXW_EXE}"         >> "${GITHUB_ENV}"
+        echo "FIXW_VERSION=${FIXW_VERSION}" >> "${GITHUB_ENV}"
 
     ## Release
     ########################################################################
@@ -149,8 +149,8 @@ jobs:
     #     startsWith(github.ref, 'refs/tags/v')
     #     && matrix.ghc-ver == '9.4.4'
     #   run: |
-    #     export DIST_TGZ=$(cabal sdist | tail -1)
-    #     echo "DIST_TGZ=${DIST_TGZ}" >> ${GITHUB_ENV}
+    #     DIST_TGZ=$(cabal sdist | tail -1)
+    #     echo "DIST_TGZ=${DIST_TGZ}" >> "${GITHUB_ENV}"
 
     # - name: Source tarball release
     #   if: >-
@@ -178,10 +178,10 @@ jobs:
         && runner.os == 'Linux'
         && matrix.ghc-ver == '9.4.4'
       run: |
-        export FIXW_BIN=fix-whitespace-${FIXW_VERSION}-linux.binary
-        cp -p ${FIXW_EXE} ${FIXW_BIN}
+        FIXW_BIN=fix-whitespace-${FIXW_VERSION}-linux.binary
+        cp -p "${FIXW_EXE}" "${FIXW_BIN}"
         # Save env variables for the next step
-        echo "FIXW_BIN=${FIXW_BIN}" >> ${GITHUB_ENV}
+        echo "FIXW_BIN=${FIXW_BIN}" >> "${GITHUB_ENV}"
 
     # - name: Linux release
     #   if: >-
@@ -209,11 +209,11 @@ jobs:
         startsWith(github.ref, 'refs/tags/v')
         && runner.os == 'macOS'
       run: |
-        export FIXW_BIN=fix-whitespace-${FIXW_VERSION}-mac.binary
+        FIXW_BIN=fix-whitespace-${FIXW_VERSION}-mac.binary
         # Raw Mac binary
-        cp -p ${FIXW_EXE} ${FIXW_BIN}
+        cp -p "${FIXW_EXE}" "${FIXW_BIN}"
         # Save env variables for the next step
-        echo "FIXW_BIN=${FIXW_BIN}" >> ${GITHUB_ENV}
+        echo "FIXW_BIN=${FIXW_BIN}" >> "${GITHUB_ENV}"
 
     # - name: Mac release
     #   if: >-
@@ -241,10 +241,10 @@ jobs:
         && runner.os == 'Windows'
       shell: bash
       run: |
-        export FIXW_BIN=fix-whitespace-${FIXW_VERSION}.exe
-        cp -p ${FIXW_EXE}.exe ${FIXW_BIN}
+        FIXW_BIN=fix-whitespace-${FIXW_VERSION}.exe
+        cp -p "${FIXW_EXE}.exe" "${FIXW_BIN}"
         # Save env variables for the next step
-        echo "FIXW_BIN=${FIXW_BIN}" >> ${GITHUB_ENV}
+        echo "FIXW_BIN=${FIXW_BIN}" >> "${GITHUB_ENV}"
 
     # - name: Windows release
     #   if: >-
