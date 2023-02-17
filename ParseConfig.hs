@@ -7,7 +7,7 @@ module ParseConfig
 
 import Data.Maybe (fromMaybe)
 import qualified Data.Yaml as Y
-import Data.Yaml (FromJSON(..), (.:?))
+import Data.Yaml (FromJSON(parseJSON), (.:?))
 
 data RawConfig = RawConfig
   { __included_dirs  :: Maybe [FilePath]

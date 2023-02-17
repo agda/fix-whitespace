@@ -1,0 +1,4 @@
+Violations:
+test/trailing-tab.txt:1: <TAB>
+test/trailing-tab.txt:2: <TAB>
+test/trailing-tab.txt:2: <NEWLINE>

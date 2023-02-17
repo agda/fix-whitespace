@@ -1,8 +1,10 @@
-.stack-work/
 *.lock
 *.log
-dist/
-dist-newstyle/
+*.rej
+.ghc.environment.*
+/.stack-work/
+/dist-newstyle/
+/dist/
 cabal.project.local
-stack.yaml
 stack*.yaml.lock
+stack.yaml

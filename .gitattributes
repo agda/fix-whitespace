@@ -1,0 +1,3 @@
+# Treat golden value files as binary to avoid CRLF issues
+# https://hackage.haskell.org/package/tasty-golden-2.3.5/docs/Test-Tasty-Golden.html
+*.golden        -text

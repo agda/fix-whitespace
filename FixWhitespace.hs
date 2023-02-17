@@ -4,40 +4,32 @@
 
 module Main where
 
-import Control.Monad
-import Control.Monad.Trans.Writer.Strict
-import Control.Exception (IOException, handle)
+import           Control.Monad                ( unless, when )
 
-import Data.Char as Char
-import Data.List.Extra (nubOrd)
-import Data.Text (Text)
-import Data.Version (showVersion)
-import qualified Data.Text as Text
-import qualified Data.Text.IO as Text  -- Strict IO.
+import           Data.List.Extra              ( nubOrd )
+import qualified Data.Text                    as Text
+import qualified Data.Text.IO                 as Text {- Strict IO -}
+import           Data.Version                 ( showVersion )
 
-import System.Directory (getCurrentDirectory, doesFileExist)
-import System.Environment
-import System.Exit
--- import System.FilePath
--- import System.FilePattern
-import System.FilePattern.Directory (getDirectoryFiles, getDirectoryFilesIgnore)
-import System.IO
-import System.Console.GetOpt
+import           System.Console.GetOpt        ( OptDescr(Option), ArgDescr(NoArg, ReqArg), ArgOrder(Permute), getOpt, usageInfo )
+import           System.Directory             ( getCurrentDirectory, doesFileExist )
+import           System.Environment           ( getArgs, getProgName )
+import           System.Exit                  ( die, exitFailure, exitSuccess )
+import           System.FilePattern.Directory ( getDirectoryFiles, getDirectoryFilesIgnore )
+import           System.IO                    ( IOMode(WriteMode), hPutStr, hPutStrLn, hSetEncoding, stderr, utf8, withFile )
 
-import Text.Read (readMaybe)
+import           Text.Read                    ( readMaybe )
 
-import ParseConfig
-import qualified Paths_fix_whitespace as PFW (version)
+import           Data.Text.FixWhitespace      ( CheckResult(CheckOK, CheckViolation, CheckIOError), checkFile, displayLineError
+                                              , TabSize, defaultTabSize )
+
+import           ParseConfig                  ( Config(Config), parseConfig )
+import qualified Paths_fix_whitespace         as PFW ( version )
 
 -- | Default configuration file.
 
 defaultConfigFile :: String
 defaultConfigFile = "fix-whitespace.yaml"
-
--- | Default tab size.
-
-defaultTabSize :: String
-defaultTabSize = "8"
 
 -- Modes.
 data Mode
@@ -46,7 +38,6 @@ data Mode
     deriving (Show, Eq)
 
 type Verbose = Bool
-type TabSize = Int
 
 data Options = Options
   { optVerbose :: Verbose
@@ -69,7 +60,7 @@ defaultOptions = Options
   , optVersion = False
   , optMode    = Fix
   , optConfig  = defaultConfigFile
-  , optTabSize = defaultTabSize
+  , optTabSize = show defaultTabSize
   }
 
 options :: [OptDescr (Options -> Options)]
@@ -86,7 +77,7 @@ options =
   , Option ['t']     ["tab"]
       (ReqArg (\ts opts -> opts { optTabSize = ts }) "TABSIZE")
       (unlines
-        [ "Expand tab characters to TABSIZE (default: " ++ defaultTabSize ++ ") many spaces."
+        [ "Expand tab characters to TABSIZE (default: " ++ show defaultTabSize ++ ") many spaces."
         , "Keep tabs if 0 is given as TABSIZE."
         ])
   , Option []        ["config"]
@@ -125,7 +116,7 @@ usageHeader progName = unlines
   , "  * Removes trailing whitespace."
   , "  * Removes trailing lines containing nothing but whitespace."
   , "  * Ensures that the file ends in a newline character."
-  , "  * Convert tabs to TABSIZE (default: " ++ defaultTabSize ++ ") spaces, unless TABSIZE is set to 0."
+  , "  * Convert tabs to TABSIZE (default: " ++ show defaultTabSize ++ ") spaces, unless TABSIZE is set to 0."
   , ""
   , "for files specified in [FILES] or"
   , ""
@@ -225,7 +216,7 @@ fix mode verbose tabSize f =
         (if mode == Fix then "fixed" else "detected") ++
         " ] " ++ f ++
         (if mode == Fix then "" else
-           ":\n" ++ (unlines $ map (displayViolations f) vs))
+           ":\n" ++ (unlines $ map (Text.unpack . displayLineError f) vs))
 
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
@@ -237,101 +228,3 @@ fix mode verbose tabSize f =
       hPutStrLn stderr $
         "[ Read error ] " ++ f
       return False
-
--- | Represents a line of input violating whitespace rules.
---   Stores the index of the line and the line itself.
-data LineViolating = LV Int Text
-
-displayViolations :: FilePath -> LineViolating -> String
-displayViolations fname (LV i l) = fname ++ ":" ++ show i ++ ": " ++
-  (Text.unpack $ visibleSpaces l)
-
--- | The transformation monad: maintains info about lines that
---   violate the rules.
-type TransformM = Writer [LineViolating]
-
--- | Result of checking a file against the whitespace policy.
-
-data CheckResult
-  = CheckOK
-      -- ^ The file satifies the policy.
-  | CheckViolation Text [LineViolating]
-      -- ^ The file violates the policy, a fix and a list of
-      --   violating lines are returned.
-  | CheckIOError IOException
-      -- ^ An I/O error occurred while accessing the file.
-      --   (E.g., the file is not UTF8 encoded.)
-
--- | Check a file against the whitespace policy,
---   returning a fix if violations occurred.
-
-checkFile :: TabSize -> FilePath -> IO CheckResult
-checkFile tabSize f =
-  handle (\ (e :: IOException) -> return $ CheckIOError e) $
-    withFile f ReadMode $ \ h -> do
-      hSetEncoding h utf8
-      s <- Text.hGetContents h
-      let (s', lvs) = transform tabSize s
-      return $ if s' == s then CheckOK else CheckViolation s' lvs
-
--- | Transforms the contents of a file.
-
-transform
-  :: TabSize   -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
-  -> Text      -- ^ Text before transformation.
-  -> (Text, [LineViolating]) -- ^ Text after transformation and violating lines if any.
-transform tabSize =
-  runWriter .
-  fmap Text.unlines .
-  fixAllViolations .
-  zip [1..] .
-  Text.lines
-  where
-  fixAllViolations :: [(Int,Text)] -> TransformM [Text]
-  fixAllViolations = removeFinalEmptyLinesExceptOne <=<
-    mapM (fixLineWith $ removeTrailingWhitespace . convertTabs)
-
-  removeFinalEmptyLinesExceptOne :: [Text] -> TransformM [Text]
-  removeFinalEmptyLinesExceptOne ls
-    | lenLs == lenLs'= pure ls
-    | otherwise = tell (map (uncurry LV) $ zip [1+lenLs' ..] els) >> pure ls'
-    where
-    ls' = reverse . dropWhile1 Text.null . reverse $ ls
-    lenLs = length ls
-    lenLs' = length ls'
-    els = replicate (lenLs - lenLs') ""
-
-  removeTrailingWhitespace =
-    Text.dropWhileEnd $ \ c -> generalCategory c `elem` [Space,Format] || c == '\t'
-
-  fixLineWith :: (Text -> Text) -> (Int, Text) -> TransformM Text
-  fixLineWith fixer (i, l)
-    | l == l' = pure l
-    | otherwise = tell [LV i l] >> pure l'
-    where l' = fixer l
-
-
-  convertTabs = if tabSize <= 0 then id else
-    Text.pack . reverse . fst . foldl convertOne ([], 0) . Text.unpack
-
-  convertOne (a, p) '\t' = (addSpaces n a, p + n)
-                           where
-                             n = tabSize - p `mod` tabSize  -- Here, tabSize > 0 is guaranteed
-  convertOne (a, p) c = (c:a, p+1)
-
-  addSpaces :: Int -> String -> String
-  addSpaces n = (replicate n ' ' ++)
-
--- | 'dropWhile' except keep the first of the dropped elements
-dropWhile1 :: (a -> Bool) -> [a] -> [a]
-dropWhile1 _ [] = []
-dropWhile1 p (x:xs)
-  | p x       = x : dropWhile p xs
-  | otherwise = x : xs
-
--- | Replace spaces and tabs with visible characters for
---   presentation purposes. Space turns into '·' and tab into '→'
-visibleSpaces :: Text -> Text
-visibleSpaces s
-  | Text.null s = "<NEWLINE>"
-  | otherwise = Text.replace "\t" "<TAB>" . Text.replace " " "·" $ s
