@@ -21,7 +21,7 @@ import           System.IO                    ( IOMode(WriteMode), hPutStr, hPut
 import           Text.Read                    ( readMaybe )
 
 import           Data.Text.FixWhitespace      ( CheckResult(CheckOK, CheckViolation, CheckIOError), checkFile, displayLineError
-                                              , TabSize, defaultTabSize )
+                                              , TabSize, Verbose, defaultTabSize )
 
 import           ParseConfig                  ( Config(Config), parseConfig )
 import qualified Paths_fix_whitespace         as PFW ( version )
@@ -36,8 +36,6 @@ data Mode
   = Fix    -- ^ Fix whitespace issues.
   | Check  -- ^ Check if there are any whitespace issues.
     deriving (Show, Eq)
-
-type Verbose = Bool
 
 data Options = Options
   { optVerbose :: Verbose
@@ -203,21 +201,15 @@ main = do
 
 fix :: Mode -> Verbose -> TabSize -> FilePath -> IO Bool
 fix mode verbose tabSize f =
-  checkFile tabSize f >>= \case
+  checkFile tabSize verbose f >>= \case
 
     CheckOK -> do
       when verbose $
         putStrLn $ "[ Checked ] " ++ f
       return False
 
-    CheckViolation s vs -> do
-      hPutStrLn stderr $
-        "[ Violation " ++
-        (if mode == Fix then "fixed" else "detected") ++
-        " ] " ++ f ++
-        (if mode == Fix then "" else
-           ":\n" ++ (unlines $ map (Text.unpack . displayLineError f) vs))
-
+    CheckViolation s vs ->  do
+      hPutStrLn stderr (msg vs)
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
           hSetEncoding h utf8
@@ -228,3 +220,13 @@ fix mode verbose tabSize f =
       hPutStrLn stderr $
         "[ Read error ] " ++ f
       return False
+
+  where
+    msg vs
+      | mode == Fix =
+        "[ Violation fixed ] " ++ f
+
+      | otherwise =
+        "[ Violation detected ] " ++ f ++
+        (if not verbose then "" else
+           ":\n" ++ unlines (map (Text.unpack . displayLineError f) vs))

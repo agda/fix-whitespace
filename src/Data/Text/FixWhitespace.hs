@@ -7,7 +7,9 @@ module Data.Text.FixWhitespace
   , LineError(..)
   , displayLineError
   , transform
+  , transformWithLog
   , TabSize
+  , Verbose
   , defaultTabSize
   )
   where
@@ -23,12 +25,13 @@ import qualified Data.Text.IO                      as Text  {- Strict IO -}
 
 import           System.IO                         ( IOMode(ReadMode), hSetEncoding, utf8, withFile )
 
-import           Data.List.Extra.Drop              ( dropWhileEnd1 )
+import           Data.List.Extra.Drop              ( dropWhileEnd1, dropWhile1 )
 
+type Verbose = Bool
 type TabSize = Int
 
 -- | Default tab size.
-
+--
 defaultTabSize :: TabSize
 defaultTabSize = 8
 
@@ -51,27 +54,42 @@ data LineError = LineError Int Text
 -- | Check a file against the whitespace policy,
 --   returning a fix if violations occurred.
 --
-checkFile :: TabSize -> FilePath -> IO CheckResult
-checkFile tabSize f =
+checkFile :: TabSize -> Verbose -> FilePath -> IO CheckResult
+checkFile tabSize verbose f =
   handle (\ (e :: IOException) -> return $ CheckIOError e) $
     withFile f ReadMode $ \ h -> do
       hSetEncoding h utf8
       s <- Text.hGetContents h
-      let (s', lvs) = transform tabSize s
+      let (s', lvs)
+            | verbose   = transformWithLog tabSize s
+            | otherwise = (transform tabSize s, [])
       return $ if s' == s then CheckOK else CheckViolation s' lvs
 
+transform
+  :: TabSize   -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
+  -> Text      -- ^ Text before transformation.
+  -> Text      -- ^ Text after transformation.
+transform tabSize =
+  Text.unlines .
+  removeFinalEmptyLinesExceptOne .
+  map (removeTrailingWhitespace .  convertTabs tabSize) .
+  Text.lines
+  where
+  removeFinalEmptyLinesExceptOne =
+    reverse . dropWhile1 Text.null . reverse
+
 -- | The transformation monad: maintains info about lines that
---   violate the rules.
+--   violate the rules. Used in the verbose mode to build a log.
 --
 type TransformM = Writer [LineError]
 
 -- | Transforms the contents of a file.
 --
-transform
+transformWithLog
   :: TabSize             -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
   -> Text                -- ^ Text before transformation.
   -> (Text, [LineError]) -- ^ Text after transformation and violating lines if any.
-transform tabSize =
+transformWithLog tabSize =
   runWriter .
   fmap Text.unlines .
   fixAllViolations .
@@ -82,7 +100,7 @@ transform tabSize =
   fixAllViolations =
     removeFinalEmptyLinesExceptOne
     <=<
-    mapM (fixLineWith $ removeTrailingWhitespace . convertTabs)
+    mapM (fixLineWith $ removeTrailingWhitespace . convertTabs tabSize)
 
   removeFinalEmptyLinesExceptOne :: [Text] -> TransformM [Text]
   removeFinalEmptyLinesExceptOne ls
@@ -96,9 +114,6 @@ transform tabSize =
     lenLs' = length ls'
     els    = replicate (lenLs - lenLs') ""
 
-  removeTrailingWhitespace =
-    Text.dropWhileEnd $ \ c -> generalCategory c `elem` [Space,Format] || c == '\t'
-
   fixLineWith :: (Text -> Text) -> (Int, Text) -> TransformM Text
   fixLineWith fixer (i, l)
     | l == l'   = pure l
@@ -108,16 +123,22 @@ transform tabSize =
     where
     l' = fixer l
 
-  convertTabs = if tabSize <= 0 then id else
-    Text.pack . reverse . fst . foldl convertOne ([], 0) . Text.unpack
+removeTrailingWhitespace :: Text -> Text
+removeTrailingWhitespace =
+  Text.dropWhileEnd $ \ c -> generalCategory c `elem` [Space,Format] || c == '\t'
 
-  convertOne (a, p) '\t' = (addSpaces n a, p + n)
-    where
-    n = tabSize - p `mod` tabSize  -- Here, tabSize > 0 is guaranteed
-  convertOne (a, p) c = (c:a, p+1)
+convertTabs :: TabSize -> Text -> Text
+convertTabs tabSize = if tabSize <= 0 then id else
+  Text.pack . reverse . fst . foldl (convertOne tabSize) ([], 0) . Text.unpack
 
-  addSpaces :: Int -> String -> String
-  addSpaces n = (replicate n ' ' ++)
+convertOne :: TabSize -> (String, Int) -> Char -> (String, Int)
+convertOne tabSize (a, p) '\t' = (addSpaces n a, p + n)
+  where
+  n = tabSize - p `mod` tabSize  -- Here, tabSize > 0 is guaranteed
+convertOne _tabSize (a, p) c = (c:a, p+1)
+
+addSpaces :: Int -> String -> String
+addSpaces n = (replicate n ' ' ++)
 
 -- | Print a erroneous line with 'visibleSpaces'.
 --
