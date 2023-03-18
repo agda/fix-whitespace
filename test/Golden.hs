@@ -34,7 +34,7 @@ goldenTests = do
 
 goldenValue :: FilePath -> IO ByteString
 goldenValue file = do
-  checkFile defaultTabSize file >>= \case
+  checkFile defaultTabSize {-verbose: -}True file >>= \case
 
     CheckIOError e ->
       ioError e
