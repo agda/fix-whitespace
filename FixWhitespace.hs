@@ -66,12 +66,15 @@ options =
   [ Option ['h']     ["help"]
       (NoArg (\opts -> opts { optHelp = True }))
       "Show this help information."
-  , Option []        ["version"]
+  , Option ['V']     ["version"]
       (NoArg (\opts -> opts { optVersion = True }))
       "Show the program's version."
   , Option ['v']     ["verbose"]
       (NoArg (\opts -> opts { optVerbose = True }))
-      "Show files as they are being checked."
+      (unlines
+        [ "Show files as they are being checked."
+        , "Display location of detected whitespace violations."
+        ])
   , Option ['t']     ["tab"]
       (ReqArg (\ts opts -> opts { optTabSize = ts }) "TABSIZE")
       (unlines

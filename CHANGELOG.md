@@ -2,6 +2,12 @@
 
 Version history.
 
+# 0.1 Rainy Summer edition released 2023-08-07
+
+- Flag `--verbose` now also displays locations of whitespace violations
+  ([#7](https://github.com/agda/fix-whitespace/issues/7), contributed by Artem Pelenitsyn).
+- Tested with GHC 8.0.2 - 9.8.1-alpha1.
+
 ## 0.0.11 Santa Clause edition released 2022-12-06
 
 - Delete trailing tabs even when `--tab=0`

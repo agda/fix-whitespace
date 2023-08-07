@@ -1,9 +1,9 @@
-Copyright (c) 2005-2021 remains with the authors.
+Copyright (c) 2005-2023 remains with the authors.
 
 fix-whitespace was originally written by Nils Anders Danielsson as
 part of Agda 2 with contributions from Ulf Norell,
 Andrés Sicard-Ramírez, Andreas Abel, Philipp Hausmann, Jesper Cockx,
-Vlad Semenov, and Liang-Ting Chen.
+Vlad Semenov, Liang-Ting Chen, and Artem Pelenitsyn.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

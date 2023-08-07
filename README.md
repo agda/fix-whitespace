@@ -10,7 +10,7 @@ fix-whitespace: Fixes whitespace issues
 This tool can keep your project and repository clean of trailing
 whitespace and missing terminal newline.
 
-Usage: `fix-whitespace [-h|--help] [-v|--verbose] [--version] [--check] [--config CONFIG] [FILES]`
+Usage: `fix-whitespace [-h|--help] [-v|--verbose] [-V|--version] [--check] [--config CONFIG] [FILES]`
 
 The program does the following to files specified in `FILES` or in the
 configuration file `fix-whitespace.yaml` under the current directory
@@ -30,8 +30,9 @@ Available options:
 *  `-v  --verbose`
 
    Show files as they are being checked.
+   _Since 0.1:_ Display location of detected whitespace violations.
 
-*  `--version`
+*  `-V  --version`
 
    Show program's version.
 
