@@ -27,23 +27,23 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
 
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    # outputs:
+    #   upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
 
     - uses: actions/checkout@v3
 
-    - name: Create release
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        draft: false
-        prerelease: false
-        release_name: fix-whitespace ${{ github.ref }}
-        tag_name: ${{ github.ref }}
-        # body: fix-whitespace binary release created from ${{ github.ref }}
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+    # - name: Create release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   with:
+    #     draft: false
+    #     prerelease: false
+    #     release_name: fix-whitespace ${{ github.ref }}
+    #     tag_name: ${{ github.ref }}
+    #     # body: fix-whitespace binary release created from ${{ github.ref }}
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
 
     - name: Source tarball creation
       run: |
@@ -53,15 +53,22 @@ jobs:
         echo "DIST_TGZ_PATH=${DIST_TGZ_PATH}" >> "${GITHUB_ENV}"
         echo "DIST_TGZ_NAME=${DIST_TGZ_NAME}" >> "${GITHUB_ENV}"
 
-    - name: Source tarball release
-      uses: actions/upload-release-asset@v1
+    # - name: Source tarball release
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: ${{ env.DIST_TGZ_PATH }}
+    #     asset_name: ${{ env.DIST_TGZ_NAME }}
+    #     asset_content_type: application/octet-stream
+
+    - name: Create release, upload source tarball
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.DIST_TGZ_PATH }}
-        asset_name: ${{ env.DIST_TGZ_NAME }}
-        asset_content_type: application/octet-stream
+      run: |
+        gh release create ${{ github.ref }} "${{ env.DIST_TGZ_PATH }}#${{ env.DIST_TGZ_NAME }}" --title "fix-whitespace ${{ github.ref }}" --generate-notes
+
 
 
   build:
@@ -265,15 +272,24 @@ jobs:
     #   #   files: |
     #   #     ${{ env.FIXW_VER_EXE }}
 
+    # - name: Upload binary
+    #   if: >-
+    #     startsWith(github.ref, 'refs/tags/v')
+    #     && (matrix.ghc-ver == '9.6.2' || runner.os != 'Linux')
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #   with:
+    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
+    #     asset_path: ${{ env.FIXW_BIN }}
+    #     asset_name: ${{ env.FIXW_BIN }}
+    #     asset_content_type: application/octet-stream
+
     - name: Upload binary
       if: >-
         startsWith(github.ref, 'refs/tags/v')
         && (matrix.ghc-ver == '9.6.2' || runner.os != 'Linux')
-      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
-        asset_path: ${{ env.FIXW_BIN }}
-        asset_name: ${{ env.FIXW_BIN }}
-        asset_content_type: application/octet-stream
+      run: |
+        gh release upload ${{ github.ref }} "${{ env.FIXW_BIN }}" --clobber
