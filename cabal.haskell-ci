@@ -1,1 +1,13 @@
-branches: master ci*
+branches: master
+distribution: focal
+
+-- BROKEN because of aeson not supporting text-2.1 yet
+--
+-- constraint-set text-2.1
+--   ghc: >= 9
+--   constraints: text ^>= 2.1
+--   tests: True
+--   run-tests: True
+--
+-- raw-project
+--   allow-newer: text
