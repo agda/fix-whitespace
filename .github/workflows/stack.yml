@@ -31,7 +31,7 @@ jobs:
     #   upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     # - name: Create release
     #   id: create_release
@@ -97,7 +97,7 @@ jobs:
         shell: bash
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Workaround runner image issue (ghcup, Linux)
       if: ${{ runner.os == 'Linux' }}
