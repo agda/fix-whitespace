@@ -79,13 +79,13 @@ jobs:
     needs: create_release
     strategy:
       matrix:
-        os: [ubuntu-22.04]
-        ghc-ver: ['9.6', '9.4', '9.2.8', '9.0.2', '8.10.7', '8.8.4', '8.6.5', '8.4.4']
+        os: [ubuntu-latest]
+        ghc-ver: ['9.8', '9.6', '9.4', '9.2.8', '9.0.2', '8.10.7', '8.8.4', '8.6.5', '8.4.4']
         include:
-          - os: windows-2022
-            ghc-ver: '9.6'
-          - os: macos-12
-            ghc-ver: '9.6'
+          - os: windows-latest
+            ghc-ver: '9.8'
+          - os: macos-latest
+            ghc-ver: '9.8'
       fail-fast: false
 
     env:
@@ -127,7 +127,7 @@ jobs:
         restore-keys: ${{ runner.os }}-stack-${{ env.STACK_VER }}-ghc-${{ matrix.ghc-ver }}-
 
     - name: Install dependencies
-      if: ${{ !steps.cache.outputs.cache-hit }}
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
       run: |
         stack build ${ARGS} --only-dependencies
 
@@ -154,7 +154,7 @@ jobs:
     #   # Conditional to ensure this deployment is only run once per action.
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && matrix.ghc-ver == '9.6'
+    #     && matrix.ghc-ver == '9.8'
     #   run: |
     #     DIST_TGZ=$(cabal sdist | tail -1)
     #     echo "DIST_TGZ=${DIST_TGZ}" >> "${GITHUB_ENV}"
@@ -162,7 +162,7 @@ jobs:
     # - name: Source tarball release
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && matrix.ghc-ver == '9.6'
+    #     && matrix.ghc-ver == '9.8'
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -183,7 +183,7 @@ jobs:
       if: >-
         startsWith(github.ref, 'refs/tags/v')
         && runner.os == 'Linux'
-        && matrix.ghc-ver == '9.6'
+        && matrix.ghc-ver == '9.8'
       run: |
         FIXW_BIN=fix-whitespace-${FIXW_VERSION}-linux.binary
         cp -p "${FIXW_EXE}" "${FIXW_BIN}"
@@ -194,7 +194,7 @@ jobs:
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
     #     && runner.os == 'Linux'
-    #     && matrix.ghc-ver == '9.6'
+    #     && matrix.ghc-ver == '9.8'
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -275,7 +275,7 @@ jobs:
     # - name: Upload binary
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && (matrix.ghc-ver == '9.6' || runner.os != 'Linux')
+    #     && (matrix.ghc-ver == '9.8' || runner.os != 'Linux')
     #   uses: actions/upload-release-asset@v1
     #   env:
     #     GITHUB_TOKEN: ${{ github.token }}
@@ -288,7 +288,7 @@ jobs:
     - name: Upload binary
       if: >-
         startsWith(github.ref, 'refs/tags/v')
-        && (matrix.ghc-ver == '9.6' || runner.os != 'Linux')
+        && (matrix.ghc-ver == '9.8' || runner.os != 'Linux')
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |

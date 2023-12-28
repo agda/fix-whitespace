@@ -18,7 +18,7 @@ tested-with:
   -- cabal-supported GHCs
   GHC == 9.8.1
   GHC == 9.6.3
-  GHC == 9.4.7
+  GHC == 9.4.8
   GHC == 9.2.8
   GHC == 9.0.2
   GHC == 8.10.7
@@ -33,6 +33,7 @@ extra-doc-files:
   README.md
   fix-whitespace.yaml
   -- stack-supported GHCs
+  stack-9.8.yaml
   stack-9.6.yaml
   stack-9.4.yaml
   stack-9.2.8.yaml
