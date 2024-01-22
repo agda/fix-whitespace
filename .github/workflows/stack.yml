@@ -116,7 +116,7 @@ jobs:
         STACK_VER=$(stack --numeric-version)
         echo "STACK_VER=${STACK_VER}" >> "${GITHUB_ENV}"
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache dependencies
       id: cache
       with:
