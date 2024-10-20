@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/andreasabel/haskell-ci
 #
-# version: 0.19.20240630
+# version: 0.19.20240703
 #
-# REGENDATA ("0.19.20240630",["github","fix-whitespace.cabal"])
+# REGENDATA ("0.19.20240703",["github","fix-whitespace.cabal"])
 #
 name: Haskell-CI
 on:
@@ -42,9 +42,9 @@ jobs:
             compilerVersion: 9.8.2
             setup-method: ghcup
             allow-failure: false
-          - compiler: ghc-9.6.5
+          - compiler: ghc-9.6.6
             compilerKind: ghc
-            compilerVersion: 9.6.5
+            compilerVersion: 9.6.6
             setup-method: ghcup
             allow-failure: false
           - compiler: ghc-9.4.8
