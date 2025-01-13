@@ -3,13 +3,11 @@ on:
   push:
     branches:
       - master
-      - ci*
     tags:
       - v*
   pull_request:
     branches:
       - master
-      - ci*
   workflow_dispatch:
 
 # For making a release, we need write permissions.
