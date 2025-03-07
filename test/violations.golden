@@ -1,3 +1,4 @@
 Violations:
 test/violations.txt:1: Trailing·space·
 test/violations.txt:3: Trailing·tab····
+test/violations.txt:5: <NEWLINE>

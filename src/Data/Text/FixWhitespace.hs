@@ -9,8 +9,10 @@ module Data.Text.FixWhitespace
   , transform
   , transformWithLog
   , TabSize
+  , ConsecutiveEmptyLines
   , Verbose
   , defaultTabSize
+  , defaultConsecutiveEmptyLines
   )
   where
 
@@ -29,11 +31,16 @@ import           Data.List.Extra.Drop              ( dropWhileEnd1, dropWhile1 )
 
 type Verbose = Bool
 type TabSize = Int
+type ConsecutiveEmptyLines = Int
 
 -- | Default tab size.
 --
 defaultTabSize :: TabSize
 defaultTabSize = 8
+
+-- | Maximum consecutive empty lines
+defaultConsecutiveEmptyLines :: ConsecutiveEmptyLines
+defaultConsecutiveEmptyLines = 0
 
 -- | Result of checking a file against the whitespace policy.
 --
@@ -54,29 +61,43 @@ data LineError = LineError Int Text
 -- | Check a file against the whitespace policy,
 --   returning a fix if violations occurred.
 --
-checkFile :: TabSize -> Verbose -> FilePath -> IO CheckResult
-checkFile tabSize verbose f =
+checkFile :: TabSize -> ConsecutiveEmptyLines -> Verbose -> FilePath -> IO CheckResult
+checkFile tabSize consecutiveLines verbose f =
   handle (\ (e :: IOException) -> return $ CheckIOError e) $
     withFile f ReadMode $ \ h -> do
       hSetEncoding h utf8
       s <- Text.hGetContents h
       let (s', lvs)
-            | verbose   = transformWithLog tabSize s
-            | otherwise = (transform tabSize s, [])
+            | verbose   = transformWithLog tabSize consecutiveLines s
+            | otherwise = (transform tabSize consecutiveLines s, [])
       return $ if s' == s then CheckOK else CheckViolation s' lvs
 
 transform
   :: TabSize   -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
+  -> ConsecutiveEmptyLines -- ^ Maximum count of consecutive empty lines. Unlimited if @<= 0@.
   -> Text      -- ^ Text before transformation.
   -> Text      -- ^ Text after transformation.
-transform tabSize =
+transform tabSize consecutiveLines =
   Text.unlines .
+  (if consecutiveLines > 0 then squashConsecutiveEmptyLines 0 else id) .
   removeFinalEmptyLinesExceptOne .
   map (removeTrailingWhitespace .  convertTabs tabSize) .
   Text.lines
   where
   removeFinalEmptyLinesExceptOne =
     reverse . dropWhile1 Text.null . reverse
+
+  squashConsecutiveEmptyLines :: Int -> [Text] -> [Text]
+  squashConsecutiveEmptyLines _ [] = []
+  squashConsecutiveEmptyLines n (l:ls)
+    | Text.null l
+    = if n >= consecutiveLines
+      then squashConsecutiveEmptyLines n ls
+      else
+        l : squashConsecutiveEmptyLines (n + 1) ls
+
+    | otherwise
+    = l : squashConsecutiveEmptyLines 0 ls
 
 -- | The transformation monad: maintains info about lines that
 --   violate the rules. Used in the verbose mode to build a log.
@@ -87,9 +108,10 @@ type TransformM = Writer [LineError]
 --
 transformWithLog
   :: TabSize             -- ^ Expand tab characters to so many spaces.  Keep tabs if @<= 0@.
+  -> ConsecutiveEmptyLines -- ^ Maximum count of consecutive empty lines. Unlimited if @<= 0@.
   -> Text                -- ^ Text before transformation.
   -> (Text, [LineError]) -- ^ Text after transformation and violating lines if any.
-transformWithLog tabSize =
+transformWithLog tabSize consecutiveLines =
   runWriter .
   fmap Text.unlines .
   fixAllViolations .
@@ -98,6 +120,8 @@ transformWithLog tabSize =
   where
   fixAllViolations :: [(Int,Text)] -> TransformM [Text]
   fixAllViolations =
+    (if consecutiveLines > 0 then squashConsecutiveEmptyLines 1 0 else return)
+    <=<
     removeFinalEmptyLinesExceptOne
     <=<
     mapM (fixLineWith $ removeTrailingWhitespace . convertTabs tabSize)
@@ -113,6 +137,25 @@ transformWithLog tabSize =
     lenLs  = length ls
     lenLs' = length ls'
     els    = replicate (lenLs - lenLs') ""
+
+  squashConsecutiveEmptyLines :: Int -> Int -> [Text] -> TransformM [Text]
+  squashConsecutiveEmptyLines _ _ [] = return []
+  squashConsecutiveEmptyLines i n (l:ls)
+    | Text.null l
+    = if n >= consecutiveLines
+      then do
+        tell [LineError i l]
+        squashConsecutiveEmptyLinesAfterError (i + 1) ls
+      else
+        (l:) <$> squashConsecutiveEmptyLines (i + 1) (n + 1) ls
+
+    | otherwise
+    = (l:) <$> squashConsecutiveEmptyLines (i + 1) 0 ls
+
+  squashConsecutiveEmptyLinesAfterError _ [] = return []
+  squashConsecutiveEmptyLinesAfterError i (l:ls)
+    | Text.null l = squashConsecutiveEmptyLinesAfterError (i + 1) ls
+    | otherwise   = squashConsecutiveEmptyLines i 0 (l:ls)
 
   fixLineWith :: (Text -> Text) -> (Int, Text) -> TransformM Text
   fixLineWith fixer (i, l)
