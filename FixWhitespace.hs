@@ -204,7 +204,7 @@ main = do
 
 fix :: Mode -> Verbose -> TabSize -> FilePath -> IO Bool
 fix mode verbose tabSize f =
-  checkFile tabSize verbose f >>= \case
+  checkFile tabSize True f >>= \case
 
     CheckOK -> do
       when verbose $
@@ -212,7 +212,7 @@ fix mode verbose tabSize f =
       return False
 
     CheckViolation s vs ->  do
-      hPutStrLn stderr (msg vs)
+      Text.hPutStrLn stderr (msg vs)
       when (mode == Fix) $
         withFile f WriteMode $ \h -> do
           hSetEncoding h utf8
@@ -227,9 +227,20 @@ fix mode verbose tabSize f =
   where
     msg vs
       | mode == Fix =
-        "[ Violation fixed ] " ++ f
+        "[ Violation fixed ] " <> Text.pack f
 
       | otherwise =
-        "[ Violation detected ] " ++ f ++
-        (if not verbose then "" else
-           ":\n" ++ unlines (map (Text.unpack . displayLineError f) vs))
+        "[ Violation detected ]:\n" <> Text.pack f <>
+        (if not verbose then (displayViolations (Just 10) vs)
+                        else (displayViolations Nothing vs))
+
+
+    displayViolations mlimit violations =
+      let (display_violations, more_violations) =
+            case mlimit of
+              Just limit -> splitAt limit violations
+              Nothing -> (violations, [])
+      in Text.unlines (map (displayLineError f) display_violations)
+          <> case more_violations of
+                [] -> mempty
+                (_:_) -> "\n... and " <> Text.pack (show (length more_violations)) <> " more violations."
