@@ -50,6 +50,7 @@ data Options = Options
   , optTabSize :: String
   -- ^ The number of spaces to expand a tab character to.  @"0"@ for keeping tabs.
   , optConsEL  :: String
+  -- ^ The number of consecutive empty lines allowed. Unlimited if 0.
   }
 
 defaultOptions :: Options
