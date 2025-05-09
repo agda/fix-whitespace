@@ -1,3 +1,3 @@
-resolver: nightly-2025-02-18
-compiler: ghc-9.10.1
+resolver: nightly-2025-05-09
+compiler: ghc-9.10.2
 compiler-check: match-exact
