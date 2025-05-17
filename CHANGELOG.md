@@ -2,6 +2,13 @@
 
 Version history.
 
+# 0.2
+
+- [BREAKING:] Flag `--verbose` now takes an optional argument
+  that determines the maximum number of whitespace violations printed per file.
+  This argument is an integer, defaulting to 10, but can be `all`
+  to not limit the number of violations.
+
 # 0.1 Rainy Summer edition released 2023-08-07
 
 - Flag `--verbose` now also displays locations of whitespace violations
