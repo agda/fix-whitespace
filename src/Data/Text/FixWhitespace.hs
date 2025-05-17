@@ -19,6 +19,7 @@ import           Control.Monad.Trans.Writer.Strict ( Writer, runWriter, tell )
 import           Control.Exception                 ( IOException, handle )
 
 import           Data.Char                         ( GeneralCategory(Space, Format), generalCategory )
+import           Data.Maybe                        ( isJust )
 import           Data.Text                         ( Text )
 import qualified Data.Text                         as Text
 import qualified Data.Text.IO                      as Text  {- Strict IO -}
@@ -27,7 +28,7 @@ import           System.IO                         ( IOMode(ReadMode), hSetEncod
 
 import           Data.List.Extra.Drop              ( dropWhileEnd1, dropWhile1 )
 
-type Verbose = Bool
+type Verbose = Maybe Int
 type TabSize = Int
 
 -- | Default tab size.
@@ -61,7 +62,7 @@ checkFile tabSize verbose f =
       hSetEncoding h utf8
       s <- Text.hGetContents h
       let (s', lvs)
-            | verbose   = transformWithLog tabSize s
+            | isJust verbose = transformWithLog tabSize s
             | otherwise = (transform tabSize s, [])
       return $ if s' == s then CheckOK else CheckViolation s' lvs
 

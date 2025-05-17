@@ -1,6 +1,6 @@
 cabal-version:   2.2
 name:            fix-whitespace
-version:         0.1
+version:         0.2
 build-type:      Simple
 
 category:        Text

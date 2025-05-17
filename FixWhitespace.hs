@@ -4,14 +4,16 @@
 
 module Main where
 
-import           Control.Monad                ( unless, when )
+import           Control.Monad                ( unless, when, forM )
 
 import           Data.List.Extra              ( nubOrd )
+import           Data.Maybe                   ( fromMaybe, isJust )
+import           Data.Text                    ( Text )
 import qualified Data.Text                    as Text
 import qualified Data.Text.IO                 as Text {- Strict IO -}
 import           Data.Version                 ( showVersion )
 
-import           System.Console.GetOpt        ( OptDescr(Option), ArgDescr(NoArg, ReqArg), ArgOrder(Permute), getOpt, usageInfo )
+import           System.Console.GetOpt        ( OptDescr(Option), ArgDescr(NoArg, ReqArg, OptArg), ArgOrder(Permute), getOpt, usageInfo )
 import           System.Directory             ( getCurrentDirectory, doesFileExist )
 import           System.Environment           ( getArgs, getProgName )
 import           System.Exit                  ( die, exitFailure, exitSuccess )
@@ -21,7 +23,7 @@ import           System.IO                    ( IOMode(WriteMode), hPutStr, hPut
 import           Text.Read                    ( readMaybe )
 
 import           Data.Text.FixWhitespace      ( CheckResult(CheckOK, CheckViolation, CheckIOError), checkFile, displayLineError
-                                              , TabSize, Verbose, defaultTabSize )
+                                              , TabSize, Verbose, defaultTabSize, LineError )
 
 import           ParseConfig                  ( Config(Config), parseConfig )
 import qualified Paths_fix_whitespace         as PFW ( version )
@@ -31,6 +33,10 @@ import qualified Paths_fix_whitespace         as PFW ( version )
 defaultConfigFile :: String
 defaultConfigFile = "fix-whitespace.yaml"
 
+-- | Default number of errors printed per file with @--verbose@.
+defaultNumberOfErrors :: Int
+defaultNumberOfErrors = 10
+
 -- Modes.
 data Mode
   = Fix    -- ^ Fix whitespace issues.
@@ -38,7 +44,7 @@ data Mode
     deriving (Show, Eq)
 
 data Options = Options
-  { optVerbose :: Verbose
+  { optVerbose :: Maybe String
   -- ^ Display the location of a file being checked or not.
   , optHelp    :: Bool
   -- ^ Display the help information.
@@ -53,7 +59,7 @@ data Options = Options
 
 defaultOptions :: Options
 defaultOptions = Options
-  { optVerbose = False
+  { optVerbose = Nothing
   , optHelp    = False
   , optVersion = False
   , optMode    = Fix
@@ -70,10 +76,12 @@ options =
       (NoArg (\opts -> opts { optVersion = True }))
       "Show the program's version."
   , Option ['v']     ["verbose"]
-      (NoArg (\opts -> opts { optVerbose = True }))
+      (OptArg (\ms opts -> opts { optVerbose = Just $ fromMaybe (show defaultNumberOfErrors) ms }) "N")
       (unlines
         [ "Show files as they are being checked."
-        , "Display location of detected whitespace violations."
+        , "Display location of detected whitespace violations,"
+        , "up to N per file, or all if N is `all'."
+        , "N defaults to 10."
         ])
   , Option ['t']     ["tab"]
       (ReqArg (\ts opts -> opts { optTabSize = ts }) "TABSIZE")
@@ -153,11 +161,16 @@ main = do
     exitFailure
 
   let mode    = optMode    opts
-      verbose = optVerbose opts
       config  = optConfig  opts
 
   tabSize <- maybe (die "Error: Illegal TABSIZE, must be an integer.") return $
     readMaybe $ optTabSize opts
+
+
+  verbose :: Verbose <- forM (optVerbose opts) $ \case
+    "all" -> pure (maxBound :: Int)
+    s     -> maybe (die "Error: Illegal VERBOSITY, must be an integer or 'all'.") pure $
+      readMaybe s
 
   base <- getCurrentDirectory
 
@@ -178,10 +191,10 @@ main = do
       -- and when not matching an excluded file pattern
       let incPatterns = map ("**/" ++) incFiles
       -- Directory and file patterns to exclude
-      let excPatterns = (map (++ "*") excDirs)
-                     ++ (map ("**/" ++) excFiles)
+      let excPatterns = map (++ "*") excDirs
+                     ++ map ("**/" ++) excFiles
 
-      when verbose $ do
+      when (isJust verbose) $ do
         putStrLn "Include whitelist:"
         putStrLn (unlines incWhitelistPatterns)
 
@@ -204,10 +217,10 @@ main = do
 
 fix :: Mode -> Verbose -> TabSize -> FilePath -> IO Bool
 fix mode verbose tabSize f =
-  checkFile tabSize True f >>= \case
+  checkFile tabSize verbose f >>= \case
 
     CheckOK -> do
-      when verbose $
+      when (isJust verbose) $
         putStrLn $ "[ Checked ] " ++ f
       return False
 
@@ -230,17 +243,16 @@ fix mode verbose tabSize f =
         "[ Violation fixed ] " <> Text.pack f
 
       | otherwise =
-        "[ Violation detected ]:\n" <> Text.pack f <>
-        (if not verbose then (displayViolations (Just 10) vs)
-                        else (displayViolations Nothing vs))
+        "[ Violation detected ] " <> Text.pack f <>
+        (displayViolations verbose vs)
 
-
-    displayViolations mlimit violations =
-      let (display_violations, more_violations) =
-            case mlimit of
-              Just limit -> splitAt limit violations
-              Nothing -> (violations, [])
-      in Text.unlines (map (displayLineError f) display_violations)
-          <> case more_violations of
-                [] -> mempty
-                (_:_) -> "\n... and " <> Text.pack (show (length more_violations)) <> " more violations."
+    -- In verbose mode, take initial errors up to maximum verbosity.
+    displayViolations :: Verbose -> [LineError] -> Text
+    displayViolations Nothing _ = Text.empty
+    displayViolations (Just limit) _ | limit <= 0 = Text.empty
+    displayViolations (Just limit) violations = do
+      let (display_violations, more_violations) = splitAt limit violations
+      -- txt should start and end with a newline character.
+      let txt = Text.unlines $ Text.empty : map (displayLineError f) display_violations
+      if null more_violations then txt
+      else txt <> "... and " <> Text.pack (show (length more_violations)) <> " more violations."

@@ -34,7 +34,7 @@ goldenTests = do
 
 goldenValue :: FilePath -> IO ByteString
 goldenValue file = do
-  checkFile defaultTabSize {-verbose: -}True file >>= \case
+  checkFile defaultTabSize {-verbose: -} maxVerbosity file >>= \case
 
     CheckIOError e ->
       ioError e
@@ -45,3 +45,5 @@ goldenValue file = do
     CheckViolation _ errs ->
       return $ LazyText.encodeUtf8 $ LazyText.fromStrict $
         Text.unlines $ "Violations:" : map (displayLineError file) errs
+  where
+    maxVerbosity = Just (maxBound :: Int)
