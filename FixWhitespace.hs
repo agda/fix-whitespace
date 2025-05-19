@@ -21,7 +21,7 @@ import           System.IO                    ( IOMode(WriteMode), hPutStr, hPut
 import           Text.Read                    ( readMaybe )
 
 import           Data.Text.FixWhitespace      ( CheckResult(CheckOK, CheckViolation, CheckIOError), checkFile, displayLineError
-                                              , TabSize, Verbose, defaultTabSize )
+                                              , TabSize, ConsecutiveEmptyLines, Verbose, defaultTabSize, defaultConsecutiveEmptyLines )
 
 import           ParseConfig                  ( Config(Config), parseConfig )
 import qualified Paths_fix_whitespace         as PFW ( version )
@@ -49,6 +49,8 @@ data Options = Options
   -- ^ The location to the configuration file.
   , optTabSize :: String
   -- ^ The number of spaces to expand a tab character to.  @"0"@ for keeping tabs.
+  , optConsEL  :: String
+  -- ^ The number of consecutive empty lines allowed. Unlimited if 0.
   }
 
 defaultOptions :: Options
@@ -59,6 +61,7 @@ defaultOptions = Options
   , optMode    = Fix
   , optConfig  = defaultConfigFile
   , optTabSize = show defaultTabSize
+  , optConsEL  = show defaultConsecutiveEmptyLines
   }
 
 options :: [OptDescr (Options -> Options)]
@@ -80,6 +83,12 @@ options =
       (unlines
         [ "Expand tab characters to TABSIZE (default: " ++ show defaultTabSize ++ ") many spaces."
         , "Keep tabs if 0 is given as TABSIZE."
+        ])
+  , Option ['n']     ["consecutive"]
+      (ReqArg (\ns opts -> opts { optConsEL = ns }) "LINES")
+      (unlines
+        [ "Maximum consecutive empty lines (default: " ++ show defaultConsecutiveEmptyLines ++ ")."
+        , "Unlimited if 0 is given as LINES."
         ])
   , Option []        ["config"]
       (ReqArg (\loc opts -> opts { optConfig = loc }) "CONFIG")
@@ -105,7 +114,7 @@ shortUsageHeader :: String -> String
 shortUsageHeader progName = unwords
   [ "Usage:"
   , progName
-  , "[-h|--help] [-v|--verbose] [--check] [--config CONFIG] [-t|--tab TABSIZE] [FILES]"
+  , "[-h|--help] [-v|--verbose] [--check] [--config CONFIG] [-t|--tab TABSIZE] [-n|--consecutive LINES] [FILES]"
   ]
 
 usageHeader :: String -> String
@@ -159,6 +168,9 @@ main = do
   tabSize <- maybe (die "Error: Illegal TABSIZE, must be an integer.") return $
     readMaybe $ optTabSize opts
 
+  consecutiveLines <- maybe (die "Error: Illegal LINES, must be an integer.") return $
+    readMaybe $ optConsEL opts
+
   base <- getCurrentDirectory
 
   files <- if not $ null nonOpts
@@ -198,13 +210,13 @@ main = do
       files1 <- getDirectoryFilesIgnore base incPatterns excPatterns
       return (nubOrd (files0 ++ files1))
 
-  changes <- mapM (fix mode verbose tabSize) files
+  changes <- mapM (fix mode verbose tabSize consecutiveLines) files
 
   when (or changes && mode == Check) exitFailure
 
-fix :: Mode -> Verbose -> TabSize -> FilePath -> IO Bool
-fix mode verbose tabSize f =
-  checkFile tabSize verbose f >>= \case
+fix :: Mode -> Verbose -> TabSize -> ConsecutiveEmptyLines -> FilePath -> IO Bool
+fix mode verbose tabSize consecutiveLines f =
+  checkFile tabSize consecutiveLines verbose f >>= \case
 
     CheckOK -> do
       when verbose $
