@@ -1,3 +1,4 @@
+*~
 *.lock
 *.log
 *.rej
@@ -5,6 +6,6 @@
 /.stack-work/
 /dist-newstyle/
 /dist/
-cabal.project.local
+cabal.project.*
 stack*.yaml.lock
 stack.yaml
