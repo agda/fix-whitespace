@@ -35,6 +35,7 @@ extra-doc-files:
   README.md
   fix-whitespace.yaml
   -- stack-supported GHCs
+  stack-9.12.yaml
   stack-9.10.yaml
   stack-9.8.yaml
   stack-9.6.yaml

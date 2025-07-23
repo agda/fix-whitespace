@@ -78,12 +78,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        ghc-ver: ['9.10', '9.8', '9.6', '9.4', '9.2.8', '9.0.2', '8.10.7', '8.8.4', '8.6.5', '8.4.4']
+        ghc-ver: ['9.12', '9.10', '9.8', '9.6', '9.4', '9.2.8', '9.0.2', '8.10.7', '8.8.4', '8.6.5', '8.4.4']
         include:
           - os: windows-latest
-            ghc-ver: '9.10'
+            ghc-ver: '9.12'
           - os: macos-latest
-            ghc-ver: '9.10'
+            ghc-ver: '9.12'
       fail-fast: false
 
     env:
@@ -153,7 +153,7 @@ jobs:
     #   # Conditional to ensure this deployment is only run once per action.
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && matrix.ghc-ver == '9.10'
+    #     && matrix.ghc-ver == '9.12'
     #   run: |
     #     DIST_TGZ=$(cabal sdist | tail -1)
     #     echo "DIST_TGZ=${DIST_TGZ}" >> "${GITHUB_ENV}"
@@ -161,7 +161,7 @@ jobs:
     # - name: Source tarball release
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && matrix.ghc-ver == '9.10'
+    #     && matrix.ghc-ver == '9.12'
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -182,7 +182,7 @@ jobs:
       if: >-
         startsWith(github.ref, 'refs/tags/v')
         && runner.os == 'Linux'
-        && matrix.ghc-ver == '9.10'
+        && matrix.ghc-ver == '9.12'
       run: |
         FIXW_BIN=fix-whitespace-${FIXW_VERSION}-linux.binary
         cp -p "${FIXW_EXE}" "${FIXW_BIN}"
@@ -193,7 +193,7 @@ jobs:
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
     #     && runner.os == 'Linux'
-    #     && matrix.ghc-ver == '9.10'
+    #     && matrix.ghc-ver == '9.12'
     #   # uses: softprops/action-gh-release@v1
     #   # with:
     #   #   draft: true
@@ -274,7 +274,7 @@ jobs:
     # - name: Upload binary
     #   if: >-
     #     startsWith(github.ref, 'refs/tags/v')
-    #     && (matrix.ghc-ver == '9.10' || runner.os != 'Linux')
+    #     && (matrix.ghc-ver == '9.12' || runner.os != 'Linux')
     #   uses: actions/upload-release-asset@v1
     #   env:
     #     GITHUB_TOKEN: ${{ github.token }}
@@ -287,7 +287,7 @@ jobs:
     - name: Upload binary
       if: >-
         startsWith(github.ref, 'refs/tags/v')
-        && (matrix.ghc-ver == '9.10' || runner.os != 'Linux')
+        && (matrix.ghc-ver == '9.12' || runner.os != 'Linux')
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
