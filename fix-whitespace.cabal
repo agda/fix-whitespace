@@ -16,6 +16,7 @@ bug-reports:     https://github.com/agda/fix-whitespace/issues
 
 tested-with:
   -- cabal-supported GHCs
+  GHC == 9.14.1
   GHC == 9.12.2
   GHC == 9.10.2
   GHC == 9.8.4
