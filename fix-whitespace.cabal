@@ -16,6 +16,7 @@ bug-reports:     https://github.com/agda/fix-whitespace/issues
 
 tested-with:
   -- cabal-supported GHCs
+  GHC == 9.14.1
   GHC == 9.12.2
   GHC == 9.10.2
   GHC == 9.8.4
@@ -91,7 +92,6 @@ executable fix-whitespace
     -- non-inherited dependencies:
     , directory    >= 1.2.6.2  &&  < 1.4
     , extra        >= 1.1      &&  < 2
-    , filepath     >= 1.4.1.0  &&  < 1.6
     , filepattern  >= 0.1.3    &&  < 0.2
         -- filepattern 0.1.3 fixes issue fix-whitespace#9
     , yaml         >= 0.8.4    &&  < 0.12
@@ -121,7 +121,7 @@ test-suite Golden
   build-depends:
       fix-whitespace
     , base
-    , filepath
+    , filepath     >= 1.4.1.0  &&  < 1.6
     , text
     -- non-inherited dependencies
     , bytestring
