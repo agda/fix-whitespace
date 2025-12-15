@@ -105,7 +105,7 @@ jobs:
         enable-stack: true
 
     - name: Restore cache dependencies
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       id: cache
       env:
         key: ${{ runner.os }}-stack-${{ steps.setup.outputs.stack-version }}-ghc-${{ steps.setup.outputs.ghc-version }}
@@ -132,7 +132,7 @@ jobs:
         stack exec ${ARGS} -- fix-whitespace --check
 
     - name: Cache dependencies
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       if:   always() && steps.cache.outputs.cache-hit != 'true'
       with:
         path: ${{ steps.setup.outputs.stack-root }}
